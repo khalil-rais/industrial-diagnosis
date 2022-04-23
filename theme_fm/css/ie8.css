@@ -1,0 +1,229 @@
+body { 
+    width: 1300px;
+    margin: auto;
+}
+#block-search-form{
+float:right;
+ 
+  width: 200px;
+} 
+
+.views-row.views-row-1.views-row-first{
+    margin-bottom: 1%;
+}
+
+.views-row.views-row-2.views-row-last{
+    margin-top: 1%;
+}
+.views-row.views-row-1.views-row-first > div.views-column.views-column-1{
+    float: left;
+    width: 31%;
+    height: 270px;
+    margin-left: 1%;
+    margin-right: 1%;
+
+  }
+
+  .views-row.views-row-2.views-row-last > div.views-column.views-column-1{
+    float: left;
+    width: 31%;
+    margin-left: 1%;
+    margin-right: 1%;
+    height: 270px;
+
+  }
+
+  .views-row.views-row-1.views-row-first > div.views-column.views-column-2{
+    float: left;
+    width: 31%;
+    margin-left: 1%;
+    margin-right: 1%;
+    height: 270px;
+
+  }
+
+  .views-row.views-row-2.views-row-last > div.views-column.views-column-2{
+    float: left;
+    width: 31%;
+    margin-left: 1%;
+    margin-right: 1%;
+    height: 270px;
+
+  }
+
+  .views-row.views-row-1.views-row-first > div.views-column.views-column-3{
+    float: left;
+    width: 31%;
+    margin-left: 1%;
+    margin-right: 1%;
+    height: 270px;
+
+  }
+
+  .views-row.views-row-2.views-row-last > div.views-column.views-column-3{
+    float: left;
+    width: 31%;
+    margin-left: 1%;
+    margin-right: 1%;
+    height: 270px;
+
+  }
+
+
+
+  .views-row.views-row-2.views-row-last:after,
+  .views-row.views-row-1.views-row-first:after {
+        content: ".";
+        display: block;
+        clear: both;
+        visibility: hidden;
+        line-height: 0;
+        height: 0;
+  }
+
+    .views-row.views-row-2.views-row-last{
+      margin-top: 4%;
+		margin-bottom: 5%;
+  }
+
+   #footer-sitemap > div > div > ul > li > ul,
+  #footer-sitemap > div > div > ul > li > ul a {
+    font-size: 12px;
+    font-family: arial;
+    color: #a1a1a1
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-415
+  /*#footer-sitemap > div > div > ul > li.menu-416,*/
+  {
+    border-right-style: dotted;
+    border-right-width: thin;
+    height: 200px;
+    width: 13.5%;
+    margin-left: 0.5%;
+    padding-right: 1%;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-415 > span, 
+  #footer-sitemap > div > div > ul > li.menu-415 > a{
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+
+
+  #footer-sitemap > div > div > ul > li.menu-416{
+    border-right-style: dotted;
+    border-right-width: thin;
+    border-left-style: dotted;
+    border-left-width: thin;
+
+    height: 200px;
+    width: 15%;
+    margin-left: 1%;
+    padding-right: 1%;
+    padding-left: 1%;
+
+
+  }
+  #footer-sitemap > div > div > ul > li.menu-416 > span,
+  #footer-sitemap > div > div > ul > li.menu-416 > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-417,
+  #footer-sitemap > div > div > ul > li.menu-822,
+  #footer-sitemap > div > div > ul > li.menu-828{
+    border-right-style: dotted;
+    border-right-width: thin;
+    height: 200px;
+    width: 15%;
+    margin-left: 1%;
+    padding-right: 1%;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-417 > span,
+  #footer-sitemap > div > div > ul > li.menu-417 > a,
+  #footer-sitemap > div > div > ul > li.menu-822 > span,
+  #footer-sitemap > div > div > ul > li.menu-822 > a,
+  #footer-sitemap > div > div > ul > li.menu-828 > span,
+  #footer-sitemap > div > div > ul > li.menu-828 > a,  
+  #footer-sitemap > div > div > ul > li.depth-1.fs-no-children.first > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-418{
+    border-right-style: dotted;
+    border-right-width: thin;
+    height: 200px;
+    width: 15%;
+    margin-left: 1%;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-418 > span,
+  #footer-sitemap > div > div > ul > li.menu-418 > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-419{
+    border-right-style: dotted;
+    border-right-width: thin;
+    height: 200px;
+    width: 13%;
+    margin-left: 1%;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-419 > span,
+  #footer-sitemap > div > div > ul > li.menu-419 > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-420{
+    border-right-style: dotted;
+    border-right-width: thin;
+    height: 200px;
+    width: 11%;
+    margin-left: 1%;
+  }
+
+  #footer-sitemap > div > div > ul > li.menu-420 > span,
+  #footer-sitemap > div > div > ul > li.menu-420 > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+  #footer-sitemap > div > div > ul > li.menu-522{
+
+    height: 200px;
+    width: 7%;
+    margin-left: 1%;
+  }
+  #footer-sitemap > div > div > ul > li.menu-522 > span,
+  #footer-sitemap > div > div > ul > li.menu-522 > a
+  {
+    font-family: "FONT_FM",trebuchet MS;
+    font-size: 1.25em;
+    color: #d9d9d9;
+  }
+  #footer-sitemap > div > div > ul > li.menu-441{
+    margin-left: 1%;
+  }
+  
+  .nivo-caption {
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* For IE8 and earlier */
+
+}

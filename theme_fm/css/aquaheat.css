@@ -1,0 +1,562 @@
+form#rapport-technique-node-form.node-form.node-rapport_technique-form div div.form-item.form-type-textfield.form-item-title,
+form#rapport-technique-node-form.node-form.node-rapport_technique-form div div#edit-field-reference-societe.form-field-type-text.form-field-name-field-reference-societe.field-widget-text-textfield.form-wrapper div#field-reference-societe-add-more-wrapper div.form-item.form-type-textfield.form-item-field-reference-societe-und-0-value,
+form[id^='releve-node-form'].node-form.node-releve-form div div.form-item.form-type-textfield.form-item-title,
+div.field-type-text.field-name-field-reference-societe.field-widget-text-textfield.form-wrapper div{
+	display: none;
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bache'].field-type-list-text.field-name-field-bache.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-bache-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].field-type-list-text.field-name-field-source-eau.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-source-eau-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reset-chaudiere'].field-type-list-text.field-name-field-reset-chaudiere.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-reset-chaudiere-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-configuration'].field-type-list-text.field-name-field-configuration.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-configuration-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-produits-de-traitement'].field-type-list-text.field-name-field-produits-de-traitement.field-widget-options-select.form-wrapper div.form-item.form-type-select.form-item-field-produits-de-traitement-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].field-type-number-decimal.field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper div[id^='field-reglage-pompe-doseuse-add-more-wrapper'] div.form-item.form-type-textfield.form-item-field-reglage-pompe-doseuse-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].field-type-number-integer.field-name-field-stock-produit-traitement.field-widget-number.form-wrapper div#field-stock-produit-traitement-add-more-wrapper div.form-item.form-type-textfield.form-item-field-stock-produit-traitement-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].field-type-number-integer.field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper div#field-frequence-reglage-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-frequence-reglage-purge-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge'].field-type-number-integer.field-name-field-duree-purge.field-widget-number.form-wrapper div#field-duree-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-duree-purge-und-0-value label{
+	float: left;
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bache'].field-type-list-text.field-name-field-bache.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-bache-und div[id^='edit-field-bache'].form-radios div.form-item.form-type-radio.form-item-field-bache-und,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].field-type-list-text.field-name-field-source-eau.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-source-eau-und div[id^='edit-field-source-eau-und'].form-radios div.form-item.form-type-radio.form-item-field-source-eau-und,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reset-chaudiere'].field-type-list-text.field-name-field-reset-chaudiere.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-reset-chaudiere-und div[id^='edit-field-reset-chaudiere-und'].form-checkboxes div.form-item.form-type-checkbox.form-item-field-reset-chaudiere-und-1,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-configuration'].field-type-list-text.field-name-field-configuration.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-configuration-und div[id^='edit-field-configuration-und'].form-checkboxes div.form-item.form-type-checkbox,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-produits-de-traitement'].field-type-list-text.field-name-field-produits-de-traitement.field-widget-options-select.form-wrapper div.form-item.form-type-select.form-item-field-produits-de-traitement-und select#edit-field-produits-de-traitement-und.form-select,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].field-type-number-decimal.field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper div#field-reglage-pompe-doseuse-add-more-wrapper div.form-item.form-type-textfield.form-item-field-reglage-pompe-doseuse-und-0-value input#edit-field-reglage-pompe-doseuse-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].field-type-number-integer.field-name-field-stock-produit-traitement.field-widget-number.form-wrapper div#field-stock-produit-traitement-add-more-wrapper div.form-item.form-type-textfield.form-item-field-stock-produit-traitement-und-0-value input#edit-field-stock-produit-traitement-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].field-type-number-integer.field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper div#field-frequence-reglage-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-frequence-reglage-purge-und-0-value input#edit-field-frequence-reglage-purge-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge.field-type-number-integer'].field-name-field-duree-purge.field-widget-number.form-wrapper div#field-duree-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-duree-purge-und-0-value input#edit-field-duree-purge-und-0-value.form-text{
+	float: left;
+	margin-left: 25px;
+	padding: 0px 0px;
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].field-type-number-integer.field-name-field-stock-produit-traitement.field-widget-number.form-wrapper{
+	float: left;
+	margin-left: 50px;
+	clear: right;
+}
+
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].field-type-number-decimal.field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-temperature'].field-type-number-decimal.field-name-field-eauadoucie-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-ta'].field-type-number-decimal.field-name-field-eauadoucie-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-hydroxyde'].form-field-type-number-decimal.form-field-name-field-eauadoucie-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-fer'].field-type-number-decimal.field-name-field-eauadoucie-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-temperature'].field-type-number-decimal.field-name-field-bachechauff-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-ta'].field-type-number-decimal.field-name-field-bachechauff-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-hydroxyde'].form-field-type-number-decimal.form-field-name-field-bachechauff-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-fer'].field-type-number-decimal.field-name-field-bachechauff-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-pression'].field-type-number-decimal.field-name-field-chaudiere1-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-temperature'].form-field-type-number-decimal.form-field-name-field-chaudiere1-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-ta'].field-type-number-decimal.field-name-field-chaudiere1-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-fer'].field-type-number-decimal.field-name-field-chaudiere1-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-pression'].field-type-number-decimal.field-name-field-chaudiere2-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-temperature'].form-field-type-number-decimal.form-field-name-field-chaudiere2-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-ta'].field-type-number-decimal.field-name-field-chaudiere2-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-fer'].field-type-number-decimal.field-name-field-chaudiere2-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-pression'].field-type-number-decimal.field-name-field-chaudiere3-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-temperature'].form-field-type-number-decimal.form-field-name-field-chaudiere3-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-ta'].field-type-number-decimal.field-name-field-chaudiere3-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-fer'].field-type-number-decimal.field-name-field-chaudiere3-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-pression'].field-type-number-decimal.field-name-field-chaudiere4-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-temperature'].form-field-type-number-decimal.form-field-name-field-chaudiere4-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-ta'].field-type-number-decimal.field-name-field-chaudiere4-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-fer'].field-type-number-decimal.field-name-field-chaudiere4-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-temperature'].field-type-number-decimal.field-name-field-retourcndnst-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-fer'].field-type-number-decimal.field-name-field-retourcndnst-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-hydroxyde'].form-field-type-number-decimal.form-field-name-field-retourcndnst-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-ta'].form-field-type-number-decimal.form-field-name-field-retourcndnst-ta.field-widget-number.form-wrapper{
+	float: left;
+	margin-right: 25px;
+	clear: left;
+	
+}
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].field-type-number-integer.field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge'].field-type-number-integer.field-name-field-duree-purge.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-conductivite'].field-type-number-decimal.field-name-field-eauadoucie-conductivite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-salinite'].field-type-number-decimal.field-name-field-eauadoucie-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-ph'].field-type-number-decimal.field-name-field-eauadoucie-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-tac'].field-type-number-decimal.field-name-field-eauadoucie-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-th'].field-type-number-decimal.field-name-field-eauadoucie-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-carbonate'].form-field-type-number-decimal.form-field-name-field-eauadoucie-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-bicarbonate'].form-field-type-number-decimal.form-field-name-field-eauadoucie-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-chlorure'].field-type-number-decimal.field-name-field-eauadoucie-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-conductivite'].field-type-number-decimal.field-name-field-bachechauff-conductivite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-salinite'].field-type-number-decimal.field-name-field-bachechauff-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-ph'].field-type-number-decimal.field-name-field-bachechauff-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-tac'].field-type-number-decimal.field-name-field-bachechauff-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-th'].field-type-number-decimal.field-name-field-bachechauff-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-carbonate'].form-field-type-number-decimal.form-field-name-field-bachechauff-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-bicarbonate'].form-field-type-number-decimal.form-field-name-field-bachechauff-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-chlorure'].field-type-number-decimal.field-name-field-bachechauff-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-sulfite'].field-type-number-decimal.field-name-field-bachechauff-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-conduct'].field-type-number-decimal.field-name-field-chaudiere1-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-salinite'].field-type-number-decimal.field-name-field-chaudiere1-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-ph'].field-type-number-decimal.field-name-field-chaudiere1-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-tac'].field-type-number-decimal.field-name-field-chaudiere1-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-th'].field-type-number-decimal.field-name-field-chaudiere1-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-hydroxyde'].form-field-type-number-decimal.form-field-name-field-chaudiere1-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-carbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere1-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-bicarbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere1-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-chlorure'].field-type-number-decimal.field-name-field-chaudiere1-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-sulfite'].field-type-number-decimal.field-name-field-chaudiere1-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-conduct'].field-type-number-decimal.field-name-field-chaudiere2-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-salinite'].field-type-number-decimal.field-name-field-chaudiere2-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-ph'].field-type-number-decimal.field-name-field-chaudiere2-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-tac'].field-type-number-decimal.field-name-field-chaudiere2-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-th'].field-type-number-decimal.field-name-field-chaudiere2-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-hydroxyde'].form-field-type-number-decimal.form-field-name-field-chaudiere2-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-carbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere2-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-bicarbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere2-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-chlorure'].field-type-number-decimal.field-name-field-chaudiere2-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-sulfite'].field-type-number-decimal.field-name-field-chaudiere2-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-conduct'].field-type-number-decimal.field-name-field-chaudiere3-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-salinite'].field-type-number-decimal.field-name-field-chaudiere3-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-ph'].field-type-number-decimal.field-name-field-chaudiere3-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-tac'].field-type-number-decimal.field-name-field-chaudiere3-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-th'].field-type-number-decimal.field-name-field-chaudiere3-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-hydroxyde'].form-field-type-number-decimal.form-field-name-field-chaudiere3-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-carbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere3-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-bicarbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere3-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-chlorure'].field-type-number-decimal.field-name-field-chaudiere3-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-sulfite'].field-type-number-decimal.field-name-field-chaudiere3-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-conduct'].field-type-number-decimal.field-name-field-chaudiere4-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-salinite'].field-type-number-decimal.field-name-field-chaudiere4-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-ph'].field-type-number-decimal.field-name-field-chaudiere4-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-tac'].field-type-number-decimal.field-name-field-chaudiere4-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-th'].field-type-number-decimal.field-name-field-chaudiere4-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-hydroxyde'].form-field-type-number-decimal.form-field-name-field-chaudiere4-hydroxyde.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-carbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere4-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-bicarbonate'].form-field-type-number-decimal.form-field-name-field-chaudiere4-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-chlorure'].field-type-number-decimal.field-name-field-chaudiere4-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-sulfite'].field-type-number-decimal.field-name-field-chaudiere4-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-conduct'].field-type-number-decimal.field-name-field-retourcndnst-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-salinite'].field-type-number-decimal.field-name-field-retourcndnst-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-ph'].field-type-number-decimal.field-name-field-retourcndnst-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-chlorure'].field-type-number-decimal.field-name-field-retourcndnst-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-th'].field-type-number-decimal.field-name-field-retourcndnst-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-ta'].field-type-number-decimal.field-name-field-retourcndnst-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-tac'].field-type-number-decimal.field-name-field-retourcndnst-tac.field-widget-number.form-wrapper{
+	float: left;
+	margin-right: 25px;
+}
+
+/*************************************************************************
+
+**************************************************************************/
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bache'].form-field-type-list-text.form-field-name-field-bache.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-bache-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].form-field-type-list-text.form-field-name-field-source-eau.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-source-eau-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].form-field-type-list-text.form-field-name-field-source-eau.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-source-eau-und div[id^='edit-field-source-eau-und'].form-radios,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-configuration'].form-field-type-list-text.form-field-name-field-configuration.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-configuration-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-produits-de-traitement'].form-field-type-list-text.form-field-name-field-produits-de-traitement.field-widget-options-select.form-wrapper div.form-item.form-type-select.form-item-field-produits-de-traitement-und label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].form-field-type-number-decimal.form-field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper div[id^='field-reglage-pompe-doseuse-add-more-wrapper'] div.form-item.form-type-textfield.form-item-field-reglage-pompe-doseuse-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].form-field-type-number-integer.form-field-name-field-stock-produit-traitement.field-widget-number.form-wrapper div#field-stock-produit-traitement-add-more-wrapper div.form-item.form-type-textfield.form-item-field-stock-produit-traitement-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].form-field-type-number-integer.form-field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper div#field-frequence-reglage-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-frequence-reglage-purge-und-0-value label,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge'].form-field-type-number-integer.form-field-name-field-duree-purge.field-widget-number.form-wrapper div#field-duree-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-duree-purge-und-0-value label{
+
+	float: left;
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bache'].form-field-type-list-text.form-field-name-field-bache.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-bache-und div[id^='edit-field-bache'].form-radios div.form-item.form-type-radio.form-item-field-bache-und,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].form-field-type-list-text.form-field-name-field-source-eau.field-widget-options-buttons.form-wrapper div.form-item.form-type-radios.form-item-field-source-eau-und div[id^='edit-field-source-eau-und'].form-radios div.form-item.form-type-radio.form-item-field-source-eau-und,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reset-chaudiere'].form-field-type-list-text.form-field-name-field-reset-chaudiere.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-reset-chaudiere-und div[id^='edit-field-reset-chaudiere-und'].form-checkboxes,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-configuration'].form-field-type-list-text.form-field-name-field-configuration.field-widget-options-buttons.form-wrapper div.form-item.form-type-checkboxes.form-item-field-configuration-und div[id^='edit-field-configuration-und'].form-checkboxes div.form-item.form-type-checkbox,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-produits-de-traitement'].form-field-type-list-text.form-field-name-field-produits-de-traitement.field-widget-options-select.form-wrapper div.form-item.form-type-select.form-item-field-produits-de-traitement-und select#edit-field-produits-de-traitement-und.form-select,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].form-field-type-number-decimal.form-field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper div#field-reglage-pompe-doseuse-add-more-wrapper div.form-item.form-type-textfield.form-item-field-reglage-pompe-doseuse-und-0-value input#edit-field-reglage-pompe-doseuse-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].form-field-type-number-integer.form-field-name-field-stock-produit-traitement.field-widget-number.form-wrapper div#field-stock-produit-traitement-add-more-wrapper div.form-item.form-type-textfield.form-item-field-stock-produit-traitement-und-0-value input#edit-field-stock-produit-traitement-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].form-field-type-number-integer.form-field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper div#field-frequence-reglage-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-frequence-reglage-purge-und-0-value input#edit-field-frequence-reglage-purge-und-0-value.form-text,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge'].form-field-type-number-integer.form-field-name-field-duree-purge.field-widget-number.form-wrapper div#field-duree-purge-add-more-wrapper div.form-item.form-type-textfield.form-item-field-duree-purge-und-0-value input#edit-field-duree-purge-und-0-value.form-text{
+	float: left;
+	margin-left: 25px;
+	padding: 0px 0px;
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-stock-produit-traitement'].form-field-type-number-integer.form-field-name-field-stock-produit-traitement.field-widget-number.form-wrapper{
+	float: left;
+	margin-left: 50px;
+	clear: right;
+}
+
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-libelle-chaudiere'].form-field-type-text.form-field-name-field-libelle-chaudiere.field-widget-text-textfield.form-wrapper{
+	clear: left;
+}
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reglage-pompe-doseuse'].form-field-type-number-decimal.form-field-name-field-reglage-pompe-doseuse.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-temperature'].form-field-type-number-decimal.form-field-name-field-eauadoucie-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-ta'].form-field-type-number-decimal.form-field-name-field-eauadoucie-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-fer'].form-field-type-number-decimal.form-field-name-field-eauadoucie-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-temperature'].form-field-type-number-decimal.form-field-name-field-bachechauff-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-ta'].form-field-type-number-decimal.form-field-name-field-bachechauff-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-fer'].form-field-type-number-decimal.form-field-name-field-bachechauff-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-pression'].form-field-type-number-decimal.form-field-name-field-chaudiere1-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-ta'].form-field-type-number-decimal.form-field-name-field-chaudiere1-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-fer'].form-field-type-number-decimal.form-field-name-field-chaudiere1-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-pression'].form-field-type-number-decimal.form-field-name-field-chaudiere2-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-ta'].form-field-type-number-decimal.form-field-name-field-chaudiere2-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-fer'].form-field-type-number-decimal.form-field-name-field-chaudiere2-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-pression'].form-field-type-number-decimal.form-field-name-field-chaudiere3-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-ta'].form-field-type-number-decimal.form-field-name-field-chaudiere3-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-fer'].form-field-type-number-decimal.form-field-name-field-chaudiere3-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-pression'].form-field-type-number-decimal.form-field-name-field-chaudiere4-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-ta'].form-field-type-number-decimal.form-field-name-field-chaudiere4-ta.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-fer'].form-field-type-number-decimal.form-field-name-field-chaudiere4-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-temperature'].form-field-type-number-decimal.form-field-name-field-retourcndnst-temperature.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-fer'].form-field-type-number-decimal.form-field-name-field-retourcndnst-fer.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-th'].form-field-type-number-decimal.form-field-name-field-retourcndnst-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-source-eau'].form-field-type-list-text.form-field-name-field-source-eau.field-widget-options-buttons.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-reset-chaudiere'].form-field-type-list-text.form-field-name-field-reset-chaudiere.field-widget-options-buttons.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-configuration'].form-field-type-list-text.form-field-name-field-configuration.field-widget-options-buttons.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-produits-de-traitement'].form-field-type-list-text.form-field-name-field-produits-de-traitement.field-widget-options-select.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-entree.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-rendement.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-entree.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-rendement.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-volume-bac-antiscalant.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-indice-langelier.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-nbr-hrs-fonctionnement.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-volume-bac-antiscalant.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-indice-langelier.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-nbr-hrs-fonctionnement.field-widget-number.form-wrapper
+{
+	float: left;
+	margin-right: 25px;
+	clear: left;	
+}
+
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-frequence-reglage-purge'].form-field-type-number-integer.form-field-name-field-frequence-reglage-purge.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-infos.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-duree-purge'].form-field-type-number-integer.form-field-name-field-duree-purge.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-conductivite'].form-field-type-number-decimal.form-field-name-field-eauadoucie-conductivite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-salinite'].form-field-type-number-decimal.form-field-name-field-eauadoucie-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-ph'].form-field-type-number-decimal.form-field-name-field-eauadoucie-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-tac'].form-field-type-number-decimal.form-field-name-field-eauadoucie-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-th'].form-field-type-number-decimal.form-field-name-field-eauadoucie-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-eau-adoucie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-eauadoucie-chlorure'].form-field-type-number-decimal.form-field-name-field-eauadoucie-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-conductivite'].form-field-type-number-decimal.form-field-name-field-bachechauff-conductivite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-salinite'].form-field-type-number-decimal.form-field-name-field-bachechauff-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-ph'].form-field-type-number-decimal.form-field-name-field-bachechauff-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-tac'].form-field-type-number-decimal.form-field-name-field-bachechauff-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-th'].form-field-type-number-decimal.form-field-name-field-bachechauff-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-chlorure'].form-field-type-number-decimal.form-field-name-field-bachechauff-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-bache-chaufferie.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-bachechauff-sulfite'].form-field-type-number-decimal.form-field-name-field-bachechauff-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-conduct'].form-field-type-number-decimal.form-field-name-field-chaudiere1-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-salinite'].form-field-type-number-decimal.form-field-name-field-chaudiere1-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-ph'].form-field-type-number-decimal.form-field-name-field-chaudiere1-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-tac'].form-field-type-number-decimal.form-field-name-field-chaudiere1-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-th'].form-field-type-number-decimal.form-field-name-field-chaudiere1-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-chlorure'].form-field-type-number-decimal.form-field-name-field-chaudiere1-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere1.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere1-sulfite'].form-field-type-number-decimal.form-field-name-field-chaudiere1-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-conduct'].form-field-type-number-decimal.form-field-name-field-chaudiere2-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-salinite'].form-field-type-number-decimal.form-field-name-field-chaudiere2-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-ph'].form-field-type-number-decimal.form-field-name-field-chaudiere2-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-tac'].form-field-type-number-decimal.form-field-name-field-chaudiere2-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-th'].form-field-type-number-decimal.form-field-name-field-chaudiere2-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-chlorure'].form-field-type-number-decimal.form-field-name-field-chaudiere2-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere2.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere2-sulfite'].form-field-type-number-decimal.form-field-name-field-chaudiere2-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-conduct'].form-field-type-number-decimal.form-field-name-field-chaudiere3-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-salinite'].form-field-type-number-decimal.form-field-name-field-chaudiere3-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-ph'].form-field-type-number-decimal.form-field-name-field-chaudiere3-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-tac'].form-field-type-number-decimal.form-field-name-field-chaudiere3-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-th'].form-field-type-number-decimal.form-field-name-field-chaudiere3-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-chlorure'].form-field-type-number-decimal.form-field-name-field-chaudiere3-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere3.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere3-sulfite'].form-field-type-number-decimal.form-field-name-field-chaudiere3-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-conduct'].form-field-type-number-decimal.form-field-name-field-chaudiere4-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-salinite'].form-field-type-number-decimal.form-field-name-field-chaudiere4-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-ph'].form-field-type-number-decimal.form-field-name-field-chaudiere4-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-tac'].form-field-type-number-decimal.form-field-name-field-chaudiere4-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-th'].form-field-type-number-decimal.form-field-name-field-chaudiere4-th.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-chlorure'].form-field-type-number-decimal.form-field-name-field-chaudiere4-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-chaudiere4.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-chaudiere4-sulfite'].form-field-type-number-decimal.form-field-name-field-chaudiere4-sulfite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-conduct'].form-field-type-number-decimal.form-field-name-field-retourcndnst-conduct.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-salinite'].form-field-type-number-decimal.form-field-name-field-retourcndnst-salinite.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-ph'].form-field-type-number-decimal.form-field-name-field-retourcndnst-ph.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-chlorure'].form-field-type-number-decimal.form-field-name-field-retourcndnst-chlorure.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-carbonate'].form-field-type-number-decimal.form-field-name-field-retourcndnst-carbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-bicarbonate'].form-field-type-number-decimal.form-field-name-field-retourcndnst-bicarbonate.field-widget-number.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div fieldset.collapsible.required-fields.group-retourcndnst.field-group-fieldset.form-wrapper.collapse-processed div.fieldset-wrapper div[id^='edit-field-retourcndnst-tac'].form-field-type-number-decimal.form-field-name-field-retourcndnst-tac.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-permeat.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-rejet.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-difference-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-conductivite-permeat.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-permeat.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-rejet.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-difference-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-conductivite-permeat.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-conductivite-entree.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-max-pomp.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-th-apres-adoucisseur.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-conductivite-entree.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-pression-hp.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-difference-pression.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-debit-max-pomp.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-th-apres-adoucisseur.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-conductivite-entree.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-pression-hp.field-widget-number.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-number-decimal.field-name-field-difference-pression.field-widget-number.form-wrapper
+{
+	float: left;
+	margin-right: 25px;
+}
+
+
+/*Hide some fields that are automatically computed*/
+form[id^='releve-node-form'].node-form.node-releve-form div div[id^='edit-field-reference-societe'].form-field-type-text.form-field-name-field-reference-societe.field-widget-text-textfield.form-wrapper div[id^='field-reference-societe-add-more-wrapper'],
+form[id^='releve-node-form'].node-form.node-releve-form div div[id^='edit-field-auteur'].field-type-entityreference.field-name-field-auteur.field-widget-options-select.form-wrapper,
+form[id^='releve-node-form'].node-form.node-releve-form div div[id^='edit-field-auteur'].form-field-type-entityreference.form-field-name-field-auteur.field-widget-options-select.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].field-type-text.field-name-field-libelle-osmoseur.field-widget-text-textfield.form-wrapper,
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur-und'].form-field-type-field-collection.form-field-name-field-osmoseur.field-widget-field-collection-embed.form-wrapper div.form-item div.tabledrag-toggle-weight-wrapper{
+	display: none;
+}
+
+/*Label des Osmoeurs*/
+form[id^='releve-node-form'] div[id^='edit-field-osmoseur'].form-field-type-field-collection.form-field-name-field-osmoseur.field-widget-field-collection-embed.form-wrapper tbody tr.draggable td div span.osmoseur_label {
+    font-size: 20px;
+    color: #0064a5;
+}
+
+/*Enelver le gris de certaines zones internes osmoseurs*/
+form[id^='releve-node-form'] table[id^='field-config-osmoseur-usine-values'] tr.draggable.odd,
+form[id^='releve-node-form'] table[id^='field-config-osmoseur-usine-values'] tr.draggable.even{
+	background-color: transparent;
+}
+
+.featured-news-column {
+    position: relative;
+    margin-bottom: 30px;
+
+}
+
+.featured-news-column .inner-box {
+    position: relative;
+    background: #f5f5f5;
+}
+
+
+/*#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure.image-box {
+    float: left;	
+    width: 38%;
+	position: relative;
+    overflow: hidden;
+	
+}*/
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure.image-box {
+    height: 300px;		
+}
+
+
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure > a.default-overlay-outer > div.inner {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    display: table;
+    vertical-align: middle;
+    text-align: center;
+}
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure > a {
+   
+    cursor: pointer;
+   
+}
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure > a.default-overlay-outer > div > div.content-layer{
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    color: #ffffff;
+
+	
+	text-align: center;
+	
+	cursor: pointer;
+}
+
+
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > div.date{
+    text-transform: capitalize;
+    width: 60px;
+    height: 60px;
+    line-height: 25px;
+    padding: 5px;
+    margin-bottom: 30px;
+    font-size: 18px;
+    color: #ffffff;
+    background: #223555;
+    font-weight: 700;
+    text-align: center;
+    -webkit-transition: all 500ms ease;
+}
+
+#block-views-expertise-technique10-block article.featured-news-column .image-box img {
+    display: block;
+    width: 100%;
+}
+
+#block-views-expertise-technique10-block article.featured-news-column .tags{
+	position:relative;
+	margin-bottom:10px;
+	color:#2f2f31;	
+}
+
+#block-views-expertise-technique10-block article.featured-news-column .tags a{
+	color:#999999;
+	font-size:14px;
+	font-family:'Lato',sans-serif;
+	text-decoration: none;
+	
+}
+#block-views-expertise-technique10-block article.featured-news-column .tags  a:hover, 
+#block-views-expertise-technique10-block article.featured-news-column .tags  a:focus{
+    text-decoration: underline;    
+}	
+
+
+#block-views-expertise-technique10-block article.featured-news-column .image-box .default-overlay-outer{
+	background:rgba(34,53,85,0.90);
+	opacity:0;
+	left:-100%;
+	position:absolute;
+	display:block;
+	left:0px;
+	top:0px;
+	width:100%;
+	height:100%;
+	padding:0px;
+	transition:all 700ms ease;
+	-webkit-transition:all 700ms ease;
+	-ms-transition:all 700ms ease;
+	-o-transition:all 700ms ease;
+	-moz-transition:all 700ms ease;	
+}
+
+
+
+
+#block-views-expertise-technique10-block article.featured-news-column:hover .image-box .default-overlay-outer{
+    left: 0px;
+    opacity: 1;
+}
+
+
+	
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > h3 > a{	
+	color: #2f2f31;
+    font-size: 18px;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > h3 > a,
+div#block-views-expertise-technique10-block span.field-content article.column.featured-news-column div.inner-box.clearfix div div.content a,
+div#block-views-traitement-de-l-eau-block  div.view.view-traitement-de-l-eau div.view-content div  div  span.field-content div.activity.field-content div span a,
+div#block-views-e7c0d1e659289c348ca69ea87a61a9a7  div.view.view-voir-aussi-articles-traitement-eau.view-id-voir_aussi_articles_traitement_eau.view-display-id-block div.view-content div.views-row div.views-field.views-field-nothing span.field-content div.activity.field-content div span a,
+div#lire_tous a{
+	color: #2f2f31;
+	text-decoration: none;	
+}
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > h3 > a:hover,
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > h3 > a:focus,
+div#block-views-expertise-technique10-block span.field-content article.column.featured-news-column div.inner-box.clearfix div div.content a:hover,
+div#block-views-expertise-technique10-block span.field-content article.column.featured-news-column div.inner-box.clearfix div div.content a:focus,
+div#block-views-traitement-de-l-eau-block  div.view.view-traitement-de-l-eau div.view-content div  div  span.field-content div.activity.field-content div span a:hover,
+div#block-views-traitement-de-l-eau-block  div.view.view-traitement-de-l-eau div.view-content div  div  span.field-content div.activity.field-content div span a:focus,
+div#block-views-e7c0d1e659289c348ca69ea87a61a9a7  div.view.view-voir-aussi-articles-traitement-eau.view-id-voir_aussi_articles_traitement_eau.view-display-id-block div.view-content div.views-row div.views-field.views-field-nothing span.field-content div.activity.field-content div span a:hover,
+div#block-views-e7c0d1e659289c348ca69ea87a61a9a7  div.view.view-voir-aussi-articles-traitement-eau.view-id-voir_aussi_articles_traitement_eau.view-display-id-block div.view-content div.views-row div.views-field.views-field-nothing span.field-content div.activity.field-content div span a:focus,
+div#block-views-traitement-de-l-eau-block  div.view.view-traitement-de-l-eau.view-id-traitement_de_l_eau div.view-footer div#lire_tous a:hover,
+div#block-views-traitement-de-l-eau-block  div.view.view-traitement-de-l-eau.view-id-traitement_de_l_eau div.view-footer div#lire_tous a:focus{
+	text-decoration: underline;  
+}
+ 
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure > a.default-overlay-outer > div.inner {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    display: table;
+    vertical-align: middle;
+    text-align: center;	
+	cursor: pointer;
+}
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > figure > a.default-overlay-outer > div > div.content-layer {
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    color: #ffffff;	
+	text-align: center;
+    cursor: pointer;
+}
+
+
+#block-views-expertise-technique10-block > div > div > div> div > span > article > div > figure > a.default-overlay-outer > div > div > div.link-icon {
+    position: relative;
+    display: inline-block;
+    line-height: 53px;
+    width: 52px;
+    height: 52px;
+    background: #ffffff;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #223555;	
+	text-align: center;
+    cursor: pointer;
+}
+
+/**/
+#block-views-expertise-technique10-block > div > div > div{
+	margin-left: 15px;
+	margin-right: 15px;
+}
+	
+
+
+#block-views-expertise-technique10-block > h2{ display: none;}
+
+
+#block-views-expertise-technique10-block > div > div > div > div > span > article > div > div > div > a{
+	text-decoration: none;
+}
+
+/***********************/
+#block-views-traitement-de-l-eau-block > div > div > div > div > span > div > div > span > a{
+    text-decoration: none;
+	
+}
+#block-views-traitement-de-l-eau-block > div > div > div > div > span > div > div:nth-child(2),
+div#block-views-e7c0d1e659289c348ca69ea87a61a9a7.block  div.view.view-voir-aussi-articles-traitement-eau.view-id-voir_aussi_articles_traitement_eau div.view-content div div.views-field.views-field-nothing span.field-content div.activity.field-content div{
+	padding-left: 10px;
+    padding-right: 10px;
+    line-height: 20px;
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+#block-views-traitement-de-l-eau-block > div > div > div.views-row.views-row-1.views-row-odd.views-row-first{
+	margin-bottom: -20px;
+}
+#block-views-traitement-de-l-eau-block > div > div > div.views-row.views-row-2.views-row-even,
+#block-views-traitement-de-l-eau-block > div > div > div.views-row.views-row-3.views-row-odd.views-row-last{
+	margin-bottom: 10px;
+}
+
+
+div#lire_tous{
+	text-align: right;
+    padding-right: 10px;
+    font-weight: bold;
+	font-style: italic;
+}	
+
+/*Masquer les boutons pour les valeurs osmoseurs*/
+form#releve-node-form table[id*="field-config-osmoseur-usine-values"] input[id*="remove-button"],
+form#releve-node-form table[id*="field-osmoseur-values"] input[id*="field-config-osmoseur-usine-und-add-more"],
+form#releve-node-form table[id*="field-osmoseur-values"] input[id*="remove-button"],
+form#releve-node-form input#edit-field-osmoseur-und-add-more{
+	display: none ;
+}
