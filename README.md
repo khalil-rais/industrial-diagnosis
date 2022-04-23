@@ -1,2 +1,2 @@
 # industrial-diagnosis
-Create a web application to prevent breakdowns for industrial customers.
+A Drupal 7 web application that prevents breakdowns for industrial customers.
