@@ -1,0 +1,3991 @@
+<?php
+
+/**
+* Implements hook_menu().
+*/
+
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+
+
+/**
+ * Implements hook_menu().
+ */
+function aquaheat_menu() {
+
+  $items = array();
+  
+  $items['ajax-test'] = array(
+    'title' => 'Ajax Test',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('aquaheat_autocheckboxes'),
+	'access callback' => 'user_is_logged_in',
+	'type' => MENU_CALLBACK,
+  );
+
+  $items['get-node-list'] = array(
+    'title' => 'Node List',
+    'page callback' => 'aquaheat_get_node_list',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+ 
+  return $items;
+}
+
+
+
+
+
+function aquaheat_node_presave($node){
+	if($node->type=="rapport_technique"){
+
+		$societe_user = user_load($node->field_societe["und"][0]['target_id']);
+
+		
+		$node->field_reference_societe['und'][0]["value"] = ucfirst($societe_user->name);
+
+				
+		if ($node->field_categorie['und'][0]["value"] == "1"){
+			$node->title = "Rapport d'analyse d'eau chaufferie";
+		}
+		elseif($node->field_categorie['und'][0]["value"] == "2"){
+			$node->title = "Rapport réglage combustion";
+		}
+		elseif($node->field_categorie['und'][0]["value"] == "3"){
+			$node->title = "Autres rapports";
+		}		
+	}
+	elseif ($node->type=="releve"){
+		global $user;
+				
+		
+		//Si le champ « saisie manuelle » est coché, les calculs et les diagnostiques automatique ne sont pas effectués.
+		$authorize_auto_compute_when_edit = true;
+		if (isset($node->field_actions['und'])){
+			if (in_array(array ("value" => '3'), $node->field_actions['und'])){
+				$authorize_auto_compute_when_edit = false;
+			}
+		}		
+		
+		//Modifier le statut du releve
+		if (isset($node->field_statut_releve['und'][0]) and in_array('Aquaheat Admin', $user->roles)){
+			$node->field_statut_releve['und'][0]["value"] = 2;
+		}		
+		
+		
+		if ($node->is_new == true or $authorize_auto_compute_when_edit){
+			
+			
+			$societe_user = user_load($node->field_societe["und"][0]['target_id']);
+			$node->field_reference_societe['und'][0]["value"] = ucfirst($societe_user->name);
+
+			$date_saisie = date ('d/m/Y');
+			//Détermination du titre.
+			if ($node->is_new == true){
+				if (in_array('Client Aquaheat', $user->roles)) {
+					$source_saisie = "Saisie externe";
+				}
+				else{
+					$source_saisie = "Saisie interne";
+				}						
+				$node->title = $node->field_reference_societe['und'][0]["value"].' - '.$date_saisie.' - '.$source_saisie;
+			}
+			//#Détermination du titre.
+			
+			//Calcul des éléments hydroxyde, carbonate et bicarbonate pour l'ensemble des sections.
+			$section_list =  array ('eauadoucie', 'chaudiere1','chaudiere2','chaudiere3','chaudiere4','retourcndnst');		
+			$element_list =  array ('hydroxyde', 'carbonate','bicarbonate');
+		
+			foreach ($element_list as $key1 => $value1){
+				foreach ($section_list as $key2 => $value2){
+					if (isset ($node->{'field_'.$value2.'_ta'}['und'][0]["value"]) and isset ($node->{'field_'.$value2.'_tac'}['und'][0]["value"])){
+						_compute_element (
+							$node->{'field_'.$value2.'_'.$value1}['und'][0]["value"],
+							$node->{'field_'.$value2.'_ta'}['und'][0]["value"],
+							$node->{'field_'.$value2.'_tac'}['und'][0]["value"],
+							$value1
+						);						
+					}
+				}
+			}
+			//#Calcul des éléments hydroxyde, carbonate et bicarbonate pour l'ensemble des sections.
+			
+
+			//Calcul de la température de la Chaudière à partir de la Pression
+			if (isset($node->field_chaudiere1_pression['und'][0]["value"])){
+				_compute_element ($node->field_chaudiere1_temperature['und'][0]["value"],$node->field_chaudiere1_pression['und'][0]["value"],0,'pression');
+			}
+			
+			if (isset($node->field_chaudiere2_pression['und'][0]["value"])){
+				_compute_element ($node->field_chaudiere2_temperature['und'][0]["value"],$node->field_chaudiere2_pression['und'][0]["value"],0,'pression');
+			}
+			
+			if (isset($node->field_chaudiere3_pression['und'][0]["value"])){
+				_compute_element ($node->field_chaudiere3_temperature['und'][0]["value"],$node->field_chaudiere3_pression['und'][0]["value"],0,'pression');
+			}
+
+			if (isset($node->field_chaudiere4_pression['und'][0]["value"])){
+				_compute_element ($node->field_chaudiere4_temperature['und'][0]["value"],$node->field_chaudiere4_pression['und'][0]["value"],0,'pression');
+			}
+			
+			//#Calcul de la température de la Chaudière à partir de la Pression
+			
+			//Calcul du taux de concentration
+			if (isset($node->field_chaudiere1_conduct['und'][0]["value"]) and isset($node->field_bachechauff_conductivite['und'][0]["value"])){
+				if ($node->field_bachechauff_conductivite['und'][0]["value"] != 0){
+					_compute_element ($node->field_chaudiere1_tconcentration['und'][0]["value"],$node->field_chaudiere1_conduct['und'][0]["value"],$node->field_bachechauff_conductivite['und'][0]["value"],'taux_concentration');
+				}
+			}
+			
+			if (isset($node->field_chaudiere2_conduct['und'][0]["value"]) and isset($node->field_bachechauff_conductivite['und'][0]["value"])){
+				if ($node->field_bachechauff_conductivite['und'][0]["value"] != 0){
+					_compute_element ($node->field_chaudiere2_tconcentration['und'][0]["value"],$node->field_chaudiere2_conduct['und'][0]["value"],$node->field_bachechauff_conductivite['und'][0]["value"],'taux_concentration');
+				}
+			}
+			
+			if (isset($node->field_chaudiere3_conduct['und'][0]["value"]) and isset($node->field_bachechauff_conductivite['und'][0]["value"])){
+				if ($node->field_bachechauff_conductivite['und'][0]["value"] != 0){
+					_compute_element ($node->field_chaudiere3_tconcentration['und'][0]["value"],$node->field_chaudiere3_conduct['und'][0]["value"],$node->field_bachechauff_conductivite['und'][0]["value"],'taux_concentration');
+				}
+			}
+			
+			if (isset($node->field_chaudiere4_conduct['und'][0]["value"]) and isset($node->field_bachechauff_conductivite['und'][0]["value"])){
+				if ($node->field_bachechauff_conductivite['und'][0]["value"] != 0){
+					_compute_element ($node->field_chaudiere4_tconcentration['und'][0]["value"],$node->field_chaudiere4_conduct['und'][0]["value"],$node->field_bachechauff_conductivite['und'][0]["value"],'taux_concentration');
+				}
+			}
+			//#Calcul du taux de concentration
+			
+			
+			//Calcul des valeurs Osmoseurs
+			if (isset ($node->field_osmoseur['und'])){
+				foreach ($node->field_osmoseur['und'] as $key_osm => $value_osm ){
+					$field_osmoseur = field_collection_field_get_entity($value_osm);
+					//Calcul osmoseur: Débit Entrée.
+					if (isset($field_osmoseur->field_debit_permeat['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_debit_rejet['und'][0]["value"])
+						)
+					{
+						_compute_element (
+							$field_osmoseur->field_debit_entree['und'][0]["value"],
+							array(
+								'field_debit_permeat' => $field_osmoseur->field_debit_permeat['und'][0]["value"], 
+								'field_debit_rejet' => $field_osmoseur->field_debit_rejet['und'][0]["value"]
+							),0,'debit_entree'
+						);
+					}
+					
+					//Calcul osmoseur: Rendement.
+					if (isset($field_osmoseur->field_debit_permeat['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_debit_entree['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_rendement['und'][0]["value"],
+							array(
+								'field_debit_permeat' => $field_osmoseur->field_debit_permeat['und'][0]["value"], 
+								'field_debit_entree' => $field_osmoseur->field_debit_entree['und'][0]["value"]
+							),0,'rendement'
+						);
+					}
+					
+					//Efficacité
+					if (isset($field_osmoseur->field_conductivite_permeat['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_conductivite_entree['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_efficacite['und'][0]["value"],
+							array(
+								'field_conductivite_permeat' => $field_osmoseur->field_conductivite_permeat['und'][0]["value"], 
+								'field_conductivite_entree' => $field_osmoseur->field_conductivite_entree['und'][0]["value"]
+							),0,'efficacite'
+						);
+					}
+					
+					//Volume Journalier Eau Brute(Vj)
+					if (isset($field_osmoseur->field_debit_entree['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_nbr_hrs_fonctionnement['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_volume_journalier_eau_brut['und'][0]["value"],
+							array(
+								'field_debit_entree' => $field_osmoseur->field_debit_entree['und'][0]["value"], 
+								'field_nbr_hrs_fonctionnement' => $field_osmoseur->field_nbr_hrs_fonctionnement['und'][0]["value"]
+							),0,'volume_journalier_eau_brute'
+						);
+					}
+					
+					//Volume Journalier Antiscalant
+					if (isset($field_osmoseur->field_debit_max_pomp['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_nbr_hrs_fonctionnement['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_volume_journalier_antiscal['und'][0]["value"],
+							array(
+								'field_debit_max_pomp' => $field_osmoseur->	field_debit_max_pomp['und'][0]["value"], 
+								'field_nbr_hrs_fonctionnement' => $field_osmoseur->field_nbr_hrs_fonctionnement['und'][0]["value"]
+							),0,'volume_journalier_antiscal'
+						);
+					}
+					
+					//Dose AS461
+					if (isset($field_osmoseur->field_volume_bac_antiscalant['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_volume_journalier_antiscal['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_volume_journalier_eau_brut['und'][0]["value"]))						
+					{
+						_compute_element (
+							$field_osmoseur->field_dose_as461['und'][0]["value"],
+							array(
+								'field_volume_bac_antiscalant' => $field_osmoseur->	field_volume_bac_antiscalant['und'][0]["value"], 
+								'field_volume_journalier_antiscal' => $field_osmoseur->field_volume_journalier_antiscal['und'][0]["value"], 
+								'field_volume_journalier_eau_brut' => $field_osmoseur->field_volume_journalier_eau_brut['und'][0]["value"]
+							),0,'dose_as461'
+						);												
+					}
+					
+					//Réglage pompe					
+					if (isset($field_osmoseur->field_volume_bac_antiscalant['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_debit_max_pomp['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_reglage_pompe['und'][0]["value"],
+							array(
+								'field_volume_bac_antiscalant' => $field_osmoseur->	field_volume_bac_antiscalant['und'][0]["value"], 
+								'field_debit_max_pomp' => $field_osmoseur->field_debit_max_pomp['und'][0]["value"]
+							),0,'reglage_pompe'
+						);
+					}
+					
+					//Concentration de préparation
+					if (isset($field_osmoseur->field_volume_journalier_antiscal['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_volume_bac_antiscalant['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_concentration_preparation['und'][0]["value"],
+							array(
+								'field_volume_journalier_antiscal' => $field_osmoseur->	field_volume_journalier_antiscal['und'][0]["value"], 
+								'field_volume_bac_antiscalant' => $field_osmoseur->field_volume_bac_antiscalant['und'][0]["value"],
+								'field_debit_max_pomp'  => $field_osmoseur->field_debit_max_pomp['und'][0]["value"],
+							),0,'concentration_preparation'
+						);
+					}
+					
+					//Pression Rejet
+					if (isset($field_osmoseur->field_pression_hp['und'][0]["value"])
+						and
+						isset($field_osmoseur->field_difference_pression['und'][0]["value"]))
+					{
+						_compute_element (
+							$field_osmoseur->field_pression_rejet['und'][0]["value"],
+							array(
+								'field_pression_hp' => $field_osmoseur->	field_pression_hp['und'][0]["value"], 
+								'field_difference_pression' => $field_osmoseur->field_difference_pression['und'][0]["value"]
+							),0,'pression_rejet'
+						);
+					}
+					
+
+					
+					$field_osmoseur->save(TRUE);
+				}
+			}
+				
+			
+			$node->body['und'][0]['format'] = 'full_html';
+			//$node->body['und'][0]['format'] = 'filtered_html';
+
+			unset ($node->field_presentation_pdf['und']);
+			$node->body['und'][0]["value"]='';
+			_compute_recommandations ($node->body['und'][0]["value"], $node->field_presentation_pdf['und'], $node);
+			_generation_pdf ($node);
+						
+		}
+		elseif ($authorize_auto_compute_when_edit == false){
+			_generation_pdf ($node);
+		}
+		
+		//Si «  Envoyer directement le rapport au client » n'est pas coché, n'ajoute pas le nœud rapport.
+		//N'envoyer le rapport que si le relevé est validé.
+		//Envoi du rapport technique
+		if (isset($node->field_actions['und'])){
+			if (in_array(array ("value" => '2'), $node->field_actions['und'])){
+				_add_rapport_technique ($node);				
+			}
+		}
+		//#Envoi du rapport technique
+		//#Si «  Envoyer directement le rapport au client » n'est pas coché, n'ajoute pas le nœud rapport.
+
+		
+		//Reset le champ Reset.
+		$node->field_reset_chaudiere['und']=array();
+	}
+
+
+}
+function _check_section_existence ($data,$use_case){
+	if ($use_case == 0){
+		if (isset($data->field_volume_bac_antiscalant['und'][0]['value'])
+			or
+			isset($data->field_debit_max_pomp['und'][0]['value'])
+			or
+			isset($data->field_th_apres_adoucisseur['und'][0]['value'])
+			or
+			isset($data->field_indice_langelier['und'][0]['value'])
+			or
+			isset($data->field_conductivite_entree['und'][0]['value'])
+			or
+			isset($data->field_debit_permeat['und'][0]['value'])
+			or
+			isset($data->field_debit_rejet['und'][0]['value'])
+			or
+			isset($data->field_conductivite_permeat['und'][0]['value'])
+			or
+			isset($data->field_nbr_hrs_fonctionnement['und'][0]['value'])
+			or
+			isset($data->field_pression_hp['und'][0]['value'])
+			or
+			isset($data->field_difference_pression['und'][0]['value'])			
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}
+	}
+	elseif($use_case == 1){
+		if (isset($data->field_eauadoucie_temperature['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_conductivite['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_salinite['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_ph['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_ta['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_tac['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_th['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_carbonate['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_fer['und'][0]['value'])
+			or
+			isset($data->field_eauadoucie_chlorure['und'][0]['value'])		
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 2){//Bâche chaufferie
+		if (isset($data->field_bachechauff_temperature['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_conductivite['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_salinite['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_ph['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_ta['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_tac['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_th['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_carbonate['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_fer['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_chlorure['und'][0]['value'])
+			or
+			isset($data->field_bachechauff_sulfite['und'][0]['value'])				
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 3){//Chaudière1
+		if (isset($data->field_chaudiere1_tconcentration['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_pression['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_conduct['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_salinite['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_ph['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_ta['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_tac['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_th['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_temperature['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_carbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_fer['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_chlorure['und'][0]['value'])
+			or
+			isset($data->field_chaudiere1_sulfite['und'][0]['value'])				
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 4){//Chaudière2
+		if (isset($data->field_chaudiere2_tconcentration['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_pression['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_conduct['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_salinite['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_ph['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_ta['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_tac['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_th['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_temperature['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_carbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_fer['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_chlorure['und'][0]['value'])
+			or
+			isset($data->field_chaudiere2_sulfite['und'][0]['value'])				
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 5){//Chaudière3
+		if (isset($data->field_chaudiere3_tconcentration['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_pression['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_conduct['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_salinite['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_ph['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_ta['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_tac['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_th['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_temperature['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_carbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_fer['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_chlorure['und'][0]['value'])
+			or
+			isset($data->field_chaudiere3_sulfite['und'][0]['value'])				
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 6){//Chaudière4
+		if (isset($data->field_chaudiere4_tconcentration['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_pression['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_conduct['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_salinite['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_ph['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_ta['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_tac['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_th['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_temperature['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_hydroxyde['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_carbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_bicarbonate['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_fer['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_chlorure['und'][0]['value'])
+			or
+			isset($data->field_chaudiere4_sulfite['und'][0]['value'])				
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}		
+	}
+	elseif($use_case == 7){//Retour Condensat
+		if (isset($data->field_retourcndnst_temperature['und'][0]['value'])
+			or
+			isset($data->field_retourcndnst_conduct['und'])
+			or
+			isset($data->field_retourcndnst_salinite['und'])
+			or
+			isset($data->field_retourcndnst_ph['und'])
+			or
+			isset($data->field_retourcndnst_fer['und'])
+			or
+			isset($data->field_retourcndnst_chlorure['und'])
+			or
+			isset($data->field_retourcndnst_th['und'])
+			or
+			isset($data->field_retourcndnst_hydroxyde['und'])
+			or
+			isset($data->field_retourcndnst_carbonate['und'])
+			or
+			isset($data->field_retourcndnst_bicarbonate['und'])
+			or
+			isset($data->field_retourcndnst_ta['und'])
+			or
+			isset($data->field_retourcndnst_tac['und'])
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}	
+	}
+	elseif($use_case == 8){//Recos Généraux
+		if (isset($data->field_eauadoucie_conductivite['und'][0]['value'])
+			or
+			isset($data->field_configuration['und'])			
+		){
+			return (true);
+		}
+		else{
+			return (false);
+		}	
+	}
+}
+function _compute_recommandations (&$recommandations, &$presentation_pdf , $node){
+	
+	$line_id=0;
+	$roman_numbers = array ('0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X','XI','XII','XIII','XIII','XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX');
+	$last_paragraph_id = 0;
+	global $current_roman;
+	
+	$societe_user  = user_load($node->field_societe["und"][0]['target_id']);
+	
+	//ob_start();
+	//var_dump($node->field_reference_societe['und']);
+	//$dumpy = ob_get_clean();
+	//watchdog('aquaheat', 'field_reference_societe:'.$dumpy);			
+
+	//Section Osmoseur
+	if (isset ($node->field_osmoseur['und']) and in_array ('Module Osmoseur', $societe_user->roles)){
+		foreach ($node->field_osmoseur['und'] as $key_osm => $value_osm ){
+			$field_osmoseur = field_collection_field_get_entity($value_osm);
+			
+			if (_check_section_existence($field_osmoseur,0)){//Avoid that empty data osmoser are shown.
+				$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+				
+				//Libellé Osmoseur: Saffai
+				$libelle_osmoseur =entity_load('field_collection_item',array($field_osmoseur->field_config_osmoseur_usine['und'][0]["value"]));
+				
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Osmoseur '.$libelle_osmoseur[$field_osmoseur->field_config_osmoseur_usine['und'][0]["value"]]->field_libelle_osmoseur['und'][0]["value"]) ;
+				
+				$reco_id = 0;
+				$reco_table = array();
+				$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+			
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Osmoseur '.$libelle_osmoseur[$field_osmoseur->field_config_osmoseur_usine['und'][0]["value"]]->field_libelle_osmoseur['und'][0]["value"].'</b>';
+				//Osmoseur Reco 1.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					!$field_osmoseur->field_injection_javel['und'][0]['value']
+				){
+					$line_id++;
+					
+	
+					_check_reco ($recommandations, $reco_id, 'Veuillez injecter du Javel dans l\'Eau de
+	Forage.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_injection_javel', 1,'c.f. recom. n°'.$reco_id);
+				}
+				//else{
+				//	_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'Valeur conforme.');
+				//}
+				//if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+				//	_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'-');
+				//}
+				
+				//Osmoseur Reco 2.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '1'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_injection_javel['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Vous n\'avez pas besoin de l\'injection du Javel puisque l\'Eau de Sonede en contient déjà.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_injection_javel', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				//Osmoseur Reco 3.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_avec_adoucisseur['und'][0]['value']
+						and
+					$field_osmoseur->field_avec_antiscalant['und'][0]['value']
+				){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					_check_reco ($recommandations, $reco_id, 'Il y a un risque d\'entartrage de l\'osmoseur. Veuillez traiter le tartre en mettant en place soit un Adoucisseur ou en injectant un antiscalant à l\'Eau de Forage.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_antiscalant', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				//Osmoseur Reco 4.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_avec_adoucisseur['und'][0]['value']
+						and
+					!$field_osmoseur->field_avec_antiscalant['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Veuillez garder l\'Adoucisseur à l\'entrée de l\'Eau de Forage pour éviter tout risque d\'entartrage de l\'osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_antiscalant', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				//Osmoseur Reco 5.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					!$field_osmoseur->field_avec_adoucisseur['und'][0]['value']
+						and
+					$field_osmoseur->field_avec_antiscalant['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Veuillez garder 
+	l\'injection d\'Antiscalant à l\'entrée de l\'Eau de Forage pour éviter tout risque   d\'entartrage de l\'osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_antiscalant', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				//Osmoseur Reco 6.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_avec_adoucisseur['und'][0]['value']
+						and
+					$field_osmoseur->field_avec_antiscalant['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'L\'Adoucisseur et l\'Antiscalant sont substituables, l\'un remplace l\'autre mais ne doivent pas exister en même temps, il faut donc l\'un des deux uniquement pour éviter l\'entartrage de l\'osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_antiscalant', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				
+				//Osmoseur Reco 7.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					!$field_osmoseur->field_filtre_charbon['und'][0]['value']
+						and
+					!$field_osmoseur->field_metabisulfite['und'][0]['value']
+						and
+					$field_osmoseur->field_injection_javel['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Il y a un risque d\'oxydation  des membranes. Veuillez donc neutraliser l\'Eau de Javel en mettant en  place soit un Filtre à Charbon ou en injectant du Meta Bisulfite à l\'Eau de Forage.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_antiscalant', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_injection_javel', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				//Osmoseur Reco 8.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '2'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_filtre_charbon['und'][0]['value']
+						and
+					$field_osmoseur->field_metabisulfite['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Le Filtre à Charbon et le Meta Bisulfite sont substituables, l\'un remplace l\'autre mais ne doivent pas exister en même temps, il faut donc l\'un des deux uniquement pour neutraliser l\'Eau de Javel et éviter ainsi l\'oxydation des membranes.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_filtre_charbon', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_metabisulfite', 1,'c.f. recom. n°'.$reco_id);
+					
+				}
+				
+				
+				//Osmoseur Reco 9.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '1'), $node->field_source_eau['und'])
+						and
+					!$field_osmoseur->field_filtre_charbon['und'][0]['value']
+						and
+					!$field_osmoseur->field_metabisulfite['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Il y a un risque d\'oxydation des membranes. Veuillez donc neutraliser l\'Eau de Javel qui existe dans l\'Eau de Sonede en mettant en place soit un Filtre à Charbon ou en injectant du Meta Bisulfite.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_filtre_charbon', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_metabisulfite', 1,'c.f. recom. n°'.$reco_id);
+				}
+	
+				//Osmoseur Reco 10.
+				if (isset($node->field_source_eau['und'])
+						and
+					in_array(array ("value" => '1'), $node->field_source_eau['und'])
+						and
+					$field_osmoseur->field_filtre_charbon['und'][0]['value']
+						and
+					$field_osmoseur->field_metabisulfite['und'][0]['value']
+				){
+					$line_id++;
+					
+					_check_reco ($recommandations, $reco_id, 'Le Filtre à Charbon et le Meta Bisulfite sont substituables, l\'un remplace l\'autre mais ne doivent pas exister en même temps, il faut donc l\'un des deux uniquement pour neutraliser l\'Eau de Javel qui existe dans l\'Eau de Sonede et éviter ainsi l\'oxydation des membranes.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_filtre_charbon', 1,'c.f. recom. n°'.$reco_id);
+					$line_id++;
+					_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_metabisulfite', 1,'c.f. recom. n°'.$reco_id);
+				}
+				
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_volume_bac_antiscalant');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_debit_max_pomp');
+				
+				//Osmoseur Reco 11.
+				if (isset ($field_osmoseur->field_th_apres_adoucisseur['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					if (
+						isset($node->field_source_eau['und'])
+							and
+						$field_osmoseur->field_avec_adoucisseur['und'][0]['value']
+							and
+						in_array(array ("value" => '2'), $node->field_source_eau['und'])
+							and
+						$field_osmoseur->field_th_apres_adoucisseur['und'][0]['value']!=0				
+					){
+						_check_reco ($recommandations, $reco_id, 'Veuillez vérifier votre Adoucisseur ou le substituer avec un antiscalant pour éviter un risque imminent d\'entartrage de votre osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_th_apres_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+						$line_id++;
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_avec_adoucisseur', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_th_apres_adoucisseur', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_th_apres_adoucisseur', 1,'-');
+					}				
+				}
+	
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_indice_langelier');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_conductivite_entree');
+				
+				//Osmoseur Reco 12.
+				$field_config_osmoseur_usine = $libelle_osmoseur[$field_osmoseur->field_config_osmoseur_usine['und'][0]["value"]];
+				
+				if (isset ($field_osmoseur->field_debit_permeat['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;				
+					
+					if (isset($field_config_osmoseur_usine->field_debit_entree['und'][0]['value'])
+							and
+						$field_osmoseur->field_debit_permeat['und'][0]['value'] < 0.95 * $field_config_osmoseur_usine->field_debit_entree['und'][0]['value']
+					){
+						_check_reco ($recommandations, $reco_id, 'Veuillez vérifier les conditions de fonctionnement pour risque d\'entartrage.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_debit_permeat', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_debit_permeat', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_debit_permeat', 1,'-');
+					}			
+				}
+			
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_debit_rejet');
+				
+				
+				//Osmoseur Reco 13.		
+				if (isset ($field_osmoseur->field_conductivite_permeat['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;				
+					
+					if (isset($field_config_osmoseur_usine->field_conductivite_entree['und'][0]['value'])
+							and
+						$field_osmoseur->field_conductivite_permeat['und'][0]['value'] > 1.1 * $field_config_osmoseur_usine->field_conductivite_entree['und'][0]['value']
+					){
+						_check_reco ($recommandations, $reco_id, 'Veuillez vérifier l\'efficacité de la neutralisation de Javel pour risque d\'oxydation de la membrane.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_conductivite_permeat', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_conductivite_permeat', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_conductivite_permeat', 1,'-');
+					}			
+				}
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_nbr_hrs_fonctionnement');
+				
+				//Osmoseur Reco 15.
+				if (isset ($field_osmoseur->field_pression_hp['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;				
+					
+					if ($field_osmoseur->field_pression_hp['und'][0]['value'] < 8 
+						or  
+						$field_osmoseur->field_pression_hp['und'][0]['value'] > 20
+					){
+						_check_reco ($recommandations, $reco_id, 'Vérifier la pression HP.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_hp', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_hp', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_hp', 1,'-');
+					}			
+				}
+							
+	
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_difference_pression');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_debit_entree');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_rendement');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_efficacite');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_volume_journalier_eau_brut');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_volume_journalier_antiscal');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_dose_as461');
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_reglage_pompe');
+	
+				//Osmoseur Reco 14.
+				if (isset ($field_osmoseur->field_pression_entree['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;				
+					
+					if ($field_osmoseur->field_pression_entree['und'][0]['value'] < 2 
+					){
+						_check_reco ($recommandations, $reco_id, 'Pression d\'entrée faible.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_entree', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_entree', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_entree', 1,'-');
+					}			
+				}
+				
+							
+				_pdf_auto ($field_osmoseur,$presentation_pdf,$line_id,'field_concentration_preparation');
+				
+				//Osmoseur Reco 16.
+				if (isset ($field_osmoseur->field_pression_rejet['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;				
+					
+					if (isset($field_config_osmoseur_usine->field_difference_pression['und'][0]['value'])
+							and
+						$field_osmoseur->field_pression_rejet['und'][0]['value'] > $field_config_osmoseur_usine->field_difference_pression['und'][0]['value'] + 1 
+					){
+						_check_reco ($recommandations, $reco_id, 'Risque de colmatage des membranes', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_rejet', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_rejet', 1,'Valeur conforme.');
+					}
+					
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($field_osmoseur,$presentation_pdf, $line_id,'field_pression_rejet', 1,'-');
+					}			
+				}
+				
+					
+				if (count ($reco_table [$roman_numbers[$last_paragraph_id]]) ==0){
+					$recommandations .= '<p> Rien à Signaler.</p>';
+				}				
+			}
+		}
+	}
+
+	if (in_array ('Module Chaufferie', $societe_user->roles)){
+		//Section Eau Adoucie
+		if (_check_section_existence($node,1)){//Avoid that empty data osmoser are shown.
+			$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+			$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau Adoucie');
+			//1 Conduct (μS/cm2)
+			$reco_id = 0;
+			$reco_table = array();
+			$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+		
+			$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Eau Adoucie</b>';
+			
+			
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_temperature');
+			
+			
+			if (isset ($node->field_eauadoucie_conductivite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_eauadoucie_conductivite['und'][0]['value'] >5000){
+					if (isset($node->field_configuration['und'])){
+						if (in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Présence de fuite sel dans l\'adoucisseur ou défaillance osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'c.f. recom. n°'.$reco_id);
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'c.f. recom. n°'.$reco_id);					
+						}
+					}
+					else{
+						_check_reco ($recommandations, $reco_id, 'Prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'c.f. recom. n°'.$reco_id);
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_conductivite', 1,'-');
+				}
+			}
+		
+			//2 Salinité
+			if (isset ($node->field_eauadoucie_salinite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_eauadoucie_salinite['und'][0]['value'] >2500){
+					if (isset($node->field_configuration['und'])){
+						if (in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Présence de fuite sel dans l\'adoucisseur ou défaillance osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_salinite', 1,'c.f. recom. n°'.$reco_id);
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_salinite', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_check_reco ($recommandations, $reco_id, 'Prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_salinite', 1,'c.f. recom. n°'.$reco_id);
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_salinite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id, 1,'field_eauadoucie_salinite','-');
+				}
+			}
+		
+			//4 PH
+			if (isset ($node->field_eauadoucie_ph['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_eauadoucie_ph['und'][0]['value'] < 7){	
+					if (isset($node->field_configuration['und'])){
+						if (in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Eau osmosée n\'est pas neutralisée.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_ph', 1,'c.f. recom. n°'.$reco_id);
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Eau brute acide.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_ph', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_check_reco ($recommandations, $reco_id, 'Eau brute acide.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_ph', 1,'c.f. recom. n°'.$reco_id);
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_ph', 1,'Valeur conforme.');		
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_ph', 1,'-');
+				}
+			}
+			
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_ta');
+		
+			//5 TAC (°F)
+			if (isset ($node->field_eauadoucie_tac['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_eauadoucie_tac['und'][0]['value'] >120){
+					if (isset($node->field_configuration['und'])){
+						if (!in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Eau brute très chargée, prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_tac', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_check_reco ($recommandations, $reco_id, 'Eau brute très chargée, prévoir l\'installation d\'un osmoseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_tac', 1,'c.f. recom. n°'.$reco_id);
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_tac', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_tac', 1,'-');
+				}
+			}
+			
+			
+			//3 TH (°F)
+			if (isset ($node->field_eauadoucie_th['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_eauadoucie_th['und'][0]['value'] >0.5){
+					_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_th', 1,'c.f. recom. n°'.$reco_id);
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_th', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_eauadoucie_th', 1,'-');
+				}
+			}
+		
+		
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_hydroxyde');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_carbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_bicarbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_fer');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_eauadoucie_chlorure');
+			
+		
+		
+			if (count ($reco_table [$roman_numbers[$last_paragraph_id]]) ==0){
+				$recommandations .= '<p> Rien à Signaler.</p>';
+			}
+		}
+		
+		if (_check_section_existence($node,2)){
+			
+			//Section Bâche chaufferie
+			$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+			$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+			$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Bâche chaufferie');
+			//6 T(°C)
+			$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Bâche chaufferie</b>';
+			$line_id=0;
+			$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);
+			if (isset ($node->field_bachechauff_temperature['und'][0]['value'])){
+				_check_and_write ($node,'field_bachechauff_temperature',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+			}
+			
+			//7' Conductivité	
+			if (isset ($node->field_bachechauff_conductivite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if ($node->field_bachechauff_conductivite['und'][0]['value'] > 4000){		
+					if (isset ($node->field_eauadoucie_conductivite['und'][0]['value']) && isset ($node->field_retourcndnst_conduct['und'][0]['value'])){
+						if ($node->field_bachechauff_conductivite['und'][0]['value'] > 1.15 * $node->field_eauadoucie_conductivite['und'][0]['value']){
+							if ($node->field_retourcndnst_conduct['und'][0]['value'] >100 ){
+								_check_reco ($recommandations, $reco_id, 'Contamination condensat ou primage chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_conductivite', 1,'c.f. recom. n°'.$reco_id);
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Vérifier fuite sel de l\'adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_conductivite', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+					}
+					else {			
+						//Limiter les cas d'ambiguité:
+						_check_reco ($recommandations, $reco_id, 'Vérifier la conductivité de la bâche chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_conductivite', 1,'c.f. recom. n°'.$reco_id);				
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_conductivite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_conductivite', 1,'-');
+				}		
+			}
+			
+			
+			//7 Salinité
+			if (isset ($node->field_bachechauff_salinite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if ($node->field_bachechauff_salinite['und'][0]['value']>2000){
+					if (isset ($node->field_eauadoucie_salinite['und'][0]['value']) && isset ($node->field_retourcndnst_conduct['und'][0]['value'])){
+						if ($node->field_bachechauff_salinite['und'][0]['value'] > 1.15 * $node->field_eauadoucie_salinite['und'][0]['value']){	
+							if ($node->field_retourcndnst_conduct['und'][0]['value'] >100 ){
+								_check_reco ($recommandations, $reco_id, 'Contamination condensat ou primage chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'c.f. recom. n°'.$reco_id);
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Vérifier fuite sel de l\'adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+					}
+					else{
+						//Limiter le cas d'ambiguité:
+						if (!isset ($node->field_retourcndnst_conduct['und'][0]['value']) && in_array(array ("value" => '3'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Vérifier la salinté de l\'eau adoucie et/ou la conductivité du retour condensat.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'c.f. recom. n°'.$reco_id);					
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Vérifier la salinté de l\'eau adoucie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'c.f. recom. n°'.$reco_id);					
+						}				
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_salinite', 1,'-');
+				}
+			}
+			//9 PH
+			if (isset ($node->field_bachechauff_ph['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if($node->field_bachechauff_ph['und'][0]['value'] < 8.5){
+					//Piste 1
+					if (isset ($node->field_retourcndnst_ph['und'][0]['value'])){
+						if($node->field_retourcndnst_ph['und'][0]['value']<8.3){
+							_check_reco ($recommandations, $reco_id, 'Les retours condensats ne sont pas suffisamment alcalins, augmenter la dose du produit de traitement condensat.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'c.f. recom. n°'.$reco_id);					
+						}
+					}
+					
+					//Piste 2
+					if (isset($node->field_eauadoucie_ph['und'][0]['value']) and $recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						if ($node->field_eauadoucie_ph['und'][0]['value'] < 7){
+							_check_reco ($recommandations, $reco_id, 'Eau brute acide.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					
+					//Limiter le cas d'ambiguité:
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						if (!isset ($node->field_retourcndnst_ph['und'][0]['value']) && in_array(array ("value" => '3'), $node->field_configuration['und']) ){
+							_check_reco ($recommandations, $reco_id, 'Vérifier la salinté de l\'eau adoucie et/ou la conductivité du retour condensat.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'c.f. recom. n°'.$reco_id);
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Vérifier la salinté de l\'eau adoucie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_ph', 1,'-');
+				}
+			}
+		
+		
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_ta');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_tac');
+			
+			//8 TH (°F)
+			if (isset ($node->field_bachechauff_th['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_bachechauff_th['und'][0]['value'] > 0.5){
+					_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_th', 1,'c.f. recom. n°'.$reco_id);			
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_th', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_th', 1,'-');
+				}
+			}
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_hydroxyde');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_carbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_bicarbonate');
+			
+			
+			//10 Fer
+			if (isset ($node->field_bachechauff_fer['und'][0]['value'])){
+				_check_and_write ($node,'field_bachechauff_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+		
+			}
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_bachechauff_chlorure');
+			
+			//11 Sulfite
+			if (isset ($node->field_bachechauff_sulfite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if ($node->field_bachechauff_sulfite['und'][0]['value']<10){
+					_check_reco ($recommandations, $reco_id, 'Absence de réducteur d\'oxygène dans la bâche', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_sulfite', 1,'c.f. recom. n°'.$reco_id);			
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_sulfite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_bachechauff_sulfite', 1,'-');
+				}
+			}
+		
+		
+			if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+				$recommandations .= '<p> Rien à Signaler.</p>';
+			}			
+		}
+	
+	
+	
+		//Section Chaudiere	
+		if (_check_section_existence($node,3)){//Avoid that empty data osmoser are shown.
+			$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];	
+			$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+			if (isset ($node->field_libelle_chaudiere['und'][0]['value'])){
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- '.$node->field_libelle_chaudiere['und'][0]['value'].'</b>';
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau '.$node->field_libelle_chaudiere['und'][0]['value']);
+			}
+			else{
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Chaudière</b>';
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau Chaudière');
+			}
+			$line_id=0;
+			
+			$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);	
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_pression');
+			
+			//13 Conduct
+			if (isset ($node->field_chaudiere1_conduct['und'][0]['value'])){
+				_check_and_write ($node,'field_chaudiere1_conduct',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+			}
+			
+			//14 Salinité
+			if (isset ($node->field_chaudiere1_salinite['und'][0]['value'])){
+				_check_and_write ($node,'field_chaudiere1_salinite',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+			}
+			
+			//16 PH
+			if (isset ($node->field_chaudiere1_ph['und'][0]['value'])){
+				_check_and_write ($node,'field_chaudiere1_ph',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);	
+			}
+				
+			//17 TA
+			if (isset ($node->field_chaudiere1_ta['und'][0]['value']) && isset ($node->field_chaudiere1_tac['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if($node->field_chaudiere1_ta['und'][0]['value'] >  85){
+					if($node->field_chaudiere1_ta['und'][0]['value'] > 0.7 * $node->field_chaudiere1_tac['und'][0]['value']){
+						_check_reco ($recommandations, $reco_id, 'Vérifier la concentration chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_ta', 1,'c.f. recom. n°'.$reco_id);			
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_ta', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_ta', 1,'-');
+				}
+			}
+				
+			//18 TAC
+				//S'il est ≥ 120 et Chaudière_Conduct < 7000 et Chaudière_Salinité < 3000 ⇒ 
+			if (isset ($node->field_chaudiere1_tac['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if($node->field_chaudiere1_tac['und'][0]['value'] > 120){
+					if (isset ($node->field_chaudiere1_conduct['und'][0]['value']) && isset ($node->field_chaudiere1_salinite['und'][0]['value'])){
+						if($node->field_chaudiere1_tac['und'][0]['value'] > 120 && $node->field_chaudiere1_conduct['und'][0]['value'] < 7000 && $node->field_chaudiere1_salinite['und'][0]['value'] < 3000 ){
+							_check_reco ($recommandations, $reco_id, 'Réduire le réglage de la pompe doseuse du produit de traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_tac', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						//Limiter le cas d'ambiguité:
+						_check_reco ($recommandations, $reco_id, 'Vérifier la conductivité et/ou la salinité de la chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_tac', 1,'c.f. recom. n°'.$reco_id);				
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_tac', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_tac', 1,'-');
+				}
+			}
+			
+			
+			//15 TH
+			if (isset ($node->field_chaudiere1_th['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_chaudiere1_th['und'][0]['value'] > 0.5){
+					_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_th', 1,'c.f. recom. n°'.$reco_id);			
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_th', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_th', 1,'-');
+				}
+			}
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_temperature');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_hydroxyde');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_carbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_bicarbonate');
+			
+			//19 Fer
+			if (isset ($node->field_chaudiere1_fer['und'][0]['value'])){
+				_check_and_write ($node,'field_chaudiere1_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+			} 
+			
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere1_chlorure');
+			
+			//20 Sulfite	
+			if (isset ($node->field_chaudiere1_sulfite['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_chaudiere1_sulfite['und'][0]['value']<10){
+					if (isset ($node->field_bachechauff_temperature['und'][0]['value'])){				
+						if ($node->field_bachechauff_temperature['und'][0]['value']<=65){
+							if (isset($node->field_configuration['und'])){
+								if (in_array (array ("value" => '2'), $node->field_configuration['und'])){
+									_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de la boucle chauffage bâche.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+									_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'c.f. recom. n°'.$reco_id);
+								}
+								else{
+									_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+									_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'c.f. recom. n°'.$reco_id);
+								}
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'c.f. recom. n°'.$reco_id);						
+							}				
+						}
+						else{
+							_check_reco ($recommandations, $reco_id, 'Augmenter le réglage de la pompe doseuse du produit du traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						//Limiter le cas d'ambiguité:
+						_check_reco ($recommandations, $reco_id, 'Vérifier la température du bâche chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'c.f. recom. n°'.$reco_id);				
+					}		
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere1_sulfite', 1,'-');
+				}
+			}
+		
+		
+			if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+				$recommandations .= '<p> Rien à Signaler.</p>';
+			}		
+		}
+
+	
+	
+		//Section Chaudiere	2
+		if (_check_section_existence($node,4)){//Avoid that empty data osmoser are shown.
+			if (isset ($node->field_libelle_chaudiere['und'][1]['value'])){
+				$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+				$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+		
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- '.$node->field_libelle_chaudiere['und'][1]['value'].'</b>';	
+				//$line_id++;
+				$line_id=0;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+		
+		
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau '.$node->field_libelle_chaudiere['und'][1]['value']);
+				
+				$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);
+				
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_pression');
+				
+				//13' Conduct
+				if (isset ($node->field_chaudiere2_conduct['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere2_conduct',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+				//14' Salinité
+				if (isset ($node->field_chaudiere2_salinite['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere2_salinite',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+		
+				
+				//16' PH
+				if (isset ($node->field_chaudiere2_ph['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere2_ph',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+		
+				//17' TA
+				if (isset ($node->field_chaudiere2_ta['und'][0]['value']) && isset ($node->field_chaudiere2_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+					if($node->field_chaudiere2_ta['und'][0]['value'] >  85){			
+						if($node->field_chaudiere2_ta['und'][0]['value'] > 0.7 * $node->field_chaudiere2_tac['und'][0]['value']){
+							_check_reco ($recommandations, $reco_id, 'Vérifier la concentration chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_ta', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_ta', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_ta', 1,'-');
+					}
+				}
+					
+				//18' TAC
+				if (isset ($node->field_chaudiere2_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if($node->field_chaudiere2_tac['und'][0]['value'] > 120){
+						if (isset ($node->field_chaudiere2_conduct['und'][0]['value']) && isset ($node->field_chaudiere2_salinite['und'][0]['value'])){
+							if($node->field_chaudiere2_tac['und'][0]['value'] > 120 && $node->field_chaudiere2_conduct['und'][0]['value'] < 7000 && $node->field_chaudiere2_salinite['und'][0]['value'] < 3000 ){
+								_check_reco ($recommandations, $reco_id, 'Réduire le réglage de la pompe doseuse du produit de traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_tac', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la conductivité de la chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_tac', 1,'c.f. recom. n°'.$reco_id);				
+						}					
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_tac', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_tac', 1,'-');
+					}
+				} 
+				
+				
+				//15' TH
+				if (isset ($node->field_chaudiere2_th['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere2_th['und'][0]['value'] > 0.5){
+						_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_th', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_th', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_th', 1,'-');
+					}
+				}
+		
+		
+		
+		
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_temperature');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_hydroxyde');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_carbonate');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_bicarbonate');
+			
+				//19' Fer
+				if (isset ($node->field_chaudiere2_fer['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere2_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}	
+			
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere2_chlorure');
+				
+				//20' Sulfite	
+				if (isset ($node->field_chaudiere2_sulfite['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere2_sulfite['und'][0]['value']<10){
+						if (isset ($node->field_bachechauff_temperature['und'][0]['value'])){
+							if ($node->field_bachechauff_temperature['und'][0]['value']<=65){
+								if (isset($node->field_configuration['und'])){
+									if (in_array(array ("value" => '2'), $node->field_configuration['und'])){
+										_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de la boucle chauffage bâche.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+									else{
+										_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+								}
+								else{
+									_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+									_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'c.f. recom. n°'.$reco_id);
+								}				
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Augmenter le réglage de la pompe doseuse du produit du traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la température de la bâche chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'c.f. recom. n°'.$reco_id);				
+						}			
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere2_sulfite', 1,'-');
+					}
+				}
+		
+		
+				if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+					$recommandations .= '<p> Rien à Signaler.</p>';
+				}
+			}		
+		}
+
+		//Section Chaudiere	3
+		if (_check_section_existence($node,5)){//Avoid that empty data osmoser are shown.
+			if (isset ($node->field_libelle_chaudiere['und'][2]['value'])){
+				$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+				$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+		
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- '.$node->field_libelle_chaudiere['und'][2]['value'].'</b>';	
+				//$line_id++;
+				$line_id=0;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+		
+		
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau '.$node->field_libelle_chaudiere['und'][2]['value']);
+				
+				$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);
+				
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_pression');
+				
+				//13'' Conduct
+				if (isset ($node->field_chaudiere3_conduct['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere3_conduct',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+				//14'' Salinité
+				if (isset ($node->field_chaudiere3_salinite['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere3_salinite',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+		
+				
+				//16'' PH
+				if (isset ($node->field_chaudiere3_ph['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere3_ph',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+		
+				//17'' TA
+				if (isset ($node->field_chaudiere3_ta['und'][0]['value']) && isset ($node->field_chaudiere3_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+					if($node->field_chaudiere3_ta['und'][0]['value'] >  85){			
+						if($node->field_chaudiere3_ta['und'][0]['value'] > 0.7 * $node->field_chaudiere3_tac['und'][0]['value']){
+							_check_reco ($recommandations, $reco_id, 'Vérifier la concentration chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_ta', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_ta', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_ta', 1,'-');
+					}
+				}
+					
+				//18'' TAC
+				if (isset ($node->field_chaudiere3_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if($node->field_chaudiere3_tac['und'][0]['value'] > 120){
+						if (isset ($node->field_chaudiere3_conduct['und'][0]['value']) && isset ($node->field_chaudiere3_salinite['und'][0]['value'])){
+							if($node->field_chaudiere3_tac['und'][0]['value'] > 120 && $node->field_chaudiere3_conduct['und'][0]['value'] < 7000 && $node->field_chaudiere3_salinite['und'][0]['value'] < 3000 ){
+								_check_reco ($recommandations, $reco_id, 'Réduire le réglage de la pompe doseuse du produit de traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_tac', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la conductivité de la chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_tac', 1,'c.f. recom. n°'.$reco_id);				
+						}					
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_tac', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_tac', 1,'-');
+					}
+				} 
+				
+				
+				//15'' TH
+				if (isset ($node->field_chaudiere3_th['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere3_th['und'][0]['value'] > 0.5){
+						_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_th', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_th', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_th', 1,'-');
+					}
+				}
+		
+		
+		
+		
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_temperature');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_hydroxyde');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_carbonate');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_bicarbonate');
+			
+				//19'' Fer
+				if (isset ($node->field_chaudiere3_fer['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere3_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}	
+			
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere3_chlorure');
+				
+				//20'' Sulfite	
+				if (isset ($node->field_chaudiere3_sulfite['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere3_sulfite['und'][0]['value']<10){
+						if (isset ($node->field_bachechauff_temperature['und'][0]['value'])){
+							if ($node->field_bachechauff_temperature['und'][0]['value']<=65){
+								if (isset($node->field_configuration['und'])){
+									if (in_array(array ("value" => '2'), $node->field_configuration['und'])){
+										_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de la boucle chauffage bâche.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+									else{
+										_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+								}
+								else{
+									_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+									_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'c.f. recom. n°'.$reco_id);
+								}				
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Augmenter le réglage de la pompe doseuse du produit du traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la température de la bâche chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'c.f. recom. n°'.$reco_id);				
+						}			
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere3_sulfite', 1,'-');
+					}
+				}
+		
+		
+				if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+					$recommandations .= '<p> Rien à Signaler.</p>';
+				}
+			}
+		}
+
+		//Section Chaudiere	4
+		if (_check_section_existence($node,6)){//Avoid that empty data osmoser are shown.
+			if (isset ($node->field_libelle_chaudiere['und'][3]['value'])){
+				$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+				$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+		
+				$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- '.$node->field_libelle_chaudiere['und'][3]['value'].'</b>';	
+				//$line_id++;
+				$line_id=0;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+		
+		
+				$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Eau '.$node->field_libelle_chaudiere['und'][3]['value']);
+				
+				$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);
+				
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_pression');
+				
+				//13''' Conduct
+				if (isset ($node->field_chaudiere4_conduct['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere4_conduct',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+				//14''' Salinité
+				if (isset ($node->field_chaudiere4_salinite['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere4_salinite',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+		
+				
+				//16''' PH
+				if (isset ($node->field_chaudiere4_ph['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere4_ph',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}
+				
+		
+				//17''' TA
+				if (isset ($node->field_chaudiere4_ta['und'][0]['value']) && isset ($node->field_chaudiere4_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+		
+					if($node->field_chaudiere4_ta['und'][0]['value'] >  85){			
+						if($node->field_chaudiere4_ta['und'][0]['value'] > 0.7 * $node->field_chaudiere4_tac['und'][0]['value']){
+							_check_reco ($recommandations, $reco_id, 'Vérifier la concentration chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_ta', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_ta', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_ta', 1,'-');
+					}
+				}
+					
+				//18''' TAC
+				if (isset ($node->field_chaudiere4_tac['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if($node->field_chaudiere4_tac['und'][0]['value'] > 120){
+						if (isset ($node->field_chaudiere4_conduct['und'][0]['value']) && isset ($node->field_chaudiere4_salinite['und'][0]['value'])){
+							if($node->field_chaudiere4_tac['und'][0]['value'] > 120 && $node->field_chaudiere4_conduct['und'][0]['value'] < 7000 && $node->field_chaudiere4_salinite['und'][0]['value'] < 3000 ){
+								_check_reco ($recommandations, $reco_id, 'Réduire le réglage de la pompe doseuse du produit de traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_tac', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la conductivité de la chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_tac', 1,'c.f. recom. n°'.$reco_id);				
+						}					
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_tac', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_tac', 1,'-');
+					}
+				} 
+				
+				
+				//15''' TH
+				if (isset ($node->field_chaudiere4_th['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere4_th['und'][0]['value'] > 0.5){
+						_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de votre adoucisseur.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_th', 1,'c.f. recom. n°'.$reco_id);
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_th', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_th', 1,'-');
+					}
+				}
+		
+		
+		
+		
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_temperature');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_hydroxyde');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_carbonate');
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_bicarbonate');
+			
+				//19''' Fer
+				if (isset ($node->field_chaudiere4_fer['und'][0]['value'])){
+					_check_and_write ($node,'field_chaudiere4_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+				}	
+			
+				_pdf_auto ($node,$presentation_pdf,$line_id,'field_chaudiere4_chlorure');
+				
+				//20''' Sulfite	
+				if (isset ($node->field_chaudiere4_sulfite['und'][0]['value'])){
+					$line_id++;
+					$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+					
+					if ($node->field_chaudiere4_sulfite['und'][0]['value']<10){
+						if (isset ($node->field_bachechauff_temperature['und'][0]['value'])){
+							if ($node->field_bachechauff_temperature['und'][0]['value']<=65){
+								if (isset($node->field_configuration['und'])){
+									if (in_array(array ("value" => '2'), $node->field_configuration['und'])){
+										_check_reco ($recommandations, $reco_id, 'Vérifier le fonctionnement de la boucle chauffage bâche.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+									else{
+										_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+										_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'c.f. recom. n°'.$reco_id);
+									}
+								}
+								else{
+									_check_reco ($recommandations, $reco_id, 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+									_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'c.f. recom. n°'.$reco_id);
+								}				
+							}
+							else{
+								_check_reco ($recommandations, $reco_id, 'Augmenter le réglage de la pompe doseuse du produit du traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+								_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'c.f. recom. n°'.$reco_id);
+							}
+						}
+						else{
+							//Limiter le cas d'ambiguité:
+							_check_reco ($recommandations, $reco_id, 'Vérifier la température de la bâche chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'c.f. recom. n°'.$reco_id);				
+						}			
+					}
+					else{
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'Valeur conforme.');
+					}
+					if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_chaudiere4_sulfite', 1,'-');
+					}
+				}
+		
+		
+				if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+					$recommandations .= '<p> Rien à Signaler.</p>';
+				}
+			}		
+		}
+
+		//Section Retour condensat
+		if (_check_section_existence($node,7)){//Avoid that empty data osmoser are shown.
+			$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+			$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+			$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Retour condensat</b>';
+			$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);	
+			//$line_id++;
+			$line_id=0;
+			
+			$presentation_pdf [] = array ('value'=> $roman_numbers[$last_paragraph_id].'|Retour condensat');
+		
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_temperature');
+			
+			//21 Conduct
+			if (isset ($node->field_retourcndnst_conduct['und'][0]['value'])){
+				$line_id++;	
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				if ($node->field_retourcndnst_conduct['und'][0]['value'] > 50){
+					if ($node->field_retourcndnst_conduct['und'][0]['value'] > 200){
+						if (isset ($node->field_retourcndnst_ph['und'][0]['value'])){				
+							_check_reco ($recommandations, $reco_id, 'Vérifier la contamination du condensat ou primage chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+							_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_conduct', 1,'c.f. recom. n°'.$reco_id);
+						}
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_conduct', 1,'Valeur conforme.');
+				}		
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_conduct', 1,'-');
+				}
+				//_check_and_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_conduct',$reco_table_tmp , $reco_table);
+			}
+		
+		
+			//21 bis salinite
+			if (isset ($node->field_retourcndnst_salinite['und'][0]['value'])){
+				$line_id++;	
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if ($node->field_retourcndnst_salinite['und'][0]['value'] > 25){
+					if ($node->field_retourcndnst_salinite['und'][0]['value'] > 100){
+						_check_reco ($recommandations, $reco_id, 'Vérifier la contamination du condensat ou primage chaudière.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_salinite', 1,'c.f. recom. n°'.$reco_id);
+					}
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_salinite', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_salinite', 1,'-');
+				}
+			}
+			
+			
+			//22 PH
+			if (isset ($node->field_retourcndnst_ph['und'][0]['value'])){
+				$line_id++;
+				$recommandations_tmp = $recommandations; $presentation_pdf_tmp = $presentation_pdf;
+				
+				if ($node->field_retourcndnst_ph['und'][0]['value'] < 8.3){
+					_check_reco ($recommandations, $reco_id, 'Augmenter le réglage de la pompe doseuse du produit du traitement.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_ph', 1,'c.f. recom. n°'.$reco_id);
+				}
+				else{
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_ph', 1,'Valeur conforme.');
+				}
+				if ($recommandations_tmp == $recommandations and $presentation_pdf_tmp ==  $presentation_pdf){
+					_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_ph', 1,'-');
+				}
+			}
+					
+			//23 Fer
+			if (isset ($node->field_retourcndnst_fer['und'][0]['value'])){
+				_check_and_write ($node,'field_retourcndnst_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table [$roman_numbers[$last_paragraph_id]], 1);
+			}
+			
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_chlorure');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_th');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_hydroxyde');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_carbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_bicarbonate');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_ta');
+			_pdf_auto ($node,$presentation_pdf,$line_id,'field_retourcndnst_tac');
+			
+			if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+				$recommandations .= '<p> Rien à Signaler.</p>';
+			}		
+		}
+
+		//Section Recommandations Générales
+		if (_check_section_existence($node,8)){//Avoid that empty data osmoser are shown.
+			$last_paragraph_id++; $current_roman=$roman_numbers[$last_paragraph_id];
+			$reco_table [$roman_numbers[$last_paragraph_id]]=array();
+		
+			$recommandations .= '<p></p><b>'.$roman_numbers[$last_paragraph_id].'- Recommandations Générales</b>';
+			$reco_id_init = count ($reco_table [$roman_numbers[$last_paragraph_id]]);	
+			//24 Garder le même dosage de la pompe doseuse.
+			//Exceptionellement on mettra tout le tableau afin de contrôler toutes les erreurs.
+			//_check_reco ($recommandations, $reco_id, "réglage de la pompe doseuse|purge", $reco_table [$roman_numbers[$last_paragraph_id]], 1 );
+			_check_reco ($recommandations, $reco_id, "réglage de la pompe doseuse|purge", $reco_table , 1 );
+			
+			//25 Envisager une alimentation chaufferie
+			if (isset($node->field_eauadoucie_conductivite['und'][0]['value'])){
+				if ($node->field_eauadoucie_conductivite['und'][0]['value'] >2000){
+					if (isset($node->field_configuration['und'])){
+						if (!in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							_check_reco ($recommandations, $reco_id, 'Envisager une alimentation chaufferie en eau osmosée.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+						}
+					}
+					else{
+						_check_reco ($recommandations, $reco_id, 'Envisager une alimentation chaufferie.', $reco_table [$roman_numbers[$last_paragraph_id]]);
+					}
+				}
+			}
+			
+			//26 Change request du 29/10/2018 Si la case "Présence de Retour" est cochée mais aucun paramètre dans la section "Retour Condensat" n'est communiqué, on ajoute au niveau de la section "Recommandations Générales", la remarque suivante: "Prévoir l'analyse du Retour Condensat pour détecter toutes éventuelles anomalies et optimiser le fonctionnement."
+			if (isset($node->field_configuration['und']) and
+				in_array(array ("value" => '3'), $node->field_configuration['und']) and
+				!isset($node->field_retourcndnst_temperature['und'][0]['value']) and
+				!isset($node->field_retourcndnst_conduct['und'][0]['value']) and
+				!isset($node->field_retourcndnst_salinite['und'][0]['value']) and
+				!isset($node->field_retourcndnst_ph['und'][0]['value']) and
+				!isset($node->field_retourcndnst_fer['und'][0]['value']) and
+				!isset($node->field_retourcndnst_chlorure['und'][0]['value']) and
+				!isset($node->field_retourcndnst_th['und'][0]['value']) and
+				!isset($node->field_retourcndnst_hydroxyde['und'][0]['value']) and
+				!isset($node->field_retourcndnst_carbonate['und'][0]['value']) and
+				!isset($node->field_retourcndnst_bicarbonate['und'][0]['value']) and
+				!isset($node->field_retourcndnst_ta['und'][0]['value']) and
+				!isset($node->field_retourcndnst_tac['und'][0]['value'])
+			){
+				_check_reco ($recommandations, $reco_id, "Prévoir l'analyse du Retour Condensat pour détecter toutes éventuelles anomalies et optimiser le fonctionnement.", $reco_table [$roman_numbers[$last_paragraph_id]]);
+			}
+			
+			
+			if ($reco_id_init  == count ($reco_table [$roman_numbers[$last_paragraph_id]])){
+				$recommandations .= '<p> Rien à Signaler.</p>';
+			}		
+		}
+	}
+
+}
+
+function _check_reco (&$recommandations, &$reco_id, $reco_text, &$reco_table, $use_case =0 ){
+
+	global $current_roman;
+	if ($use_case ==0){
+		$i=0;
+		$found=false;
+		
+		while ($i<count ($reco_table) and $found==false){
+			if ($reco_table [$i]['comment'] == $reco_text){
+				$found = true;			
+			}
+			$i++;
+		}
+		
+		if ($found){
+			$reco_id = $reco_table [$i-1]['reco_id'];
+		}
+		else{
+			$reco_id = count ($reco_table) + 1;
+			//$reco_id =  1;
+			$reco_table [] = array ('reco_id'=> $current_roman.'.'.$reco_id, 'comment' => $reco_text);
+			$recommandations .= '<p><b> '.$current_roman.'.'.$reco_id.'-</b> '.$reco_text.'</p>';
+		}
+		$reco_id = $current_roman.'.'.$reco_id;
+	}
+	elseif ($use_case ==1){
+		//Used by general recommendations section
+		//_check_reco ($recommandations, $reco_id, "réglage de la pompe doseuse|purge",
+		
+		$list = explode ( '|' , $reco_text);
+		$general_reco = array (0 => "Garder le même réglage de la pompe doseuse.", 1=> "Garder le même réglage de la fréquence de la purge chaudière.");
+		
+		//Recherche à traverts toutes les cellules du tableau.		
+		foreach ($reco_table as $reco_table_k => $reco_table_v){					
+			//for ($i=0;$i < count($reco_table_v);$i++){
+			foreach ($reco_table_v as $reco_k => $reco_v){
+				foreach ($list as $key => $value){
+					if (preg_match ( '/'.$value.'/' , $reco_v['comment'])){
+						if ($value == "réglage de la pompe doseuse"){
+							unset ($general_reco[0]);
+						}
+						elseif ($value == "purge"){
+							unset ($general_reco[1]);
+						}
+					}
+				}
+				//watchdog('aquaheat', 'loopy:'.$found.'-'.$i);
+			}
+		}
+		
+		foreach ($general_reco as $key => $value){
+			$reco_id = count ($reco_table [$current_roman]) + 1;
+			$reco_text = $value;
+			//Ajouter une reco dans la dernière celluc active
+			$reco_table [$current_roman][] = array (
+				'reco_id'=> $current_roman.'.'.$reco_id, 
+				'comment' => $reco_text
+			);
+			$recommandations .= '<p><b> '.$current_roman.'.'.$reco_id.'-</b> '.$reco_text.'</p>';
+		}
+		
+	}
+
+}
+
+function _check_and_write ($node,$parameter,&$presentation_pdf,&$line_id,&$recommandations,&$reco_id, &$diagnostic, &$reco_table, $flag){
+	$flag==1?$line_id++:null;
+	$diagnostic = '-';
+	$value = $node->{$parameter}['und'][0]['value'];
+		
+	if ($parameter == 'field_retourcndnst_fer')	{
+		if ($node->{$parameter}['und'][0]['value'] > 1){
+			if (isset ($node->field_retourcndnst_ph['und'][0]['value'])){
+				if ($node->field_retourcndnst_ph['und'][0]['value'] > 8.3){
+					$diagnostic = 'Vérifier la contamination du condensat ou primage chaudière.';
+				}
+				else{					
+					$diagnostic = 'Augmenter le réglage de la pompe doseuse du produit du traitement.';
+				}
+				$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+				$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+			}
+			else{
+				//Limiter le cas d'ambiguité:
+				$flag==1?_check_reco ($recommandations, $reco_id, 'Vérifier le ph du retour condensat.', $reco_table ):null;
+				$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+			}	
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_fer', 1,$diagnostic):null;
+		}
+		if ($diagnostic == '-'){
+			$diagnostic = 'Valeur conforme.';
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,'field_retourcndnst_fer', 1,$diagnostic):null;
+		}
+	}
+	elseif ($parameter == 'field_bachechauff_fer'){
+		if ($node->{$parameter}['und'][0]['value']>1){
+			//Piste 1
+			if (isset($node->field_retourcndnst_fer['und'][0]['value'])){
+				if ($node->field_retourcndnst_fer['und'][0]['value']>1){
+					$diagnostic = 'Présence de corrosion dans les retours, vérifier la dose du produit de traitement condensat.';
+				}
+			}
+			
+			//Piste 2
+			if (isset($node->field_eauadoucie_fer['und'][0]['value']) and $diagnostic == '-'){
+				if ($node->field_eauadoucie_fer['und'][0]['value']>=1){
+					if (isset($node->field_configuration['und'])){
+						if (!in_array(array ("value" => '1'), $node->field_configuration['und'])){
+							$diagnostic = 'Présence de corrosion dans l\'eau brute, vérifier le PH de l\'eau brute.';
+						}
+					}
+					else{
+						$diagnostic = 'Présence de corrosion dans l\'eau brute, vérifier le PH de l\'eau brute.';
+					}
+				}
+				elseif (isset($node->field_bache['und'][0]['value'])){
+					if ($node->field_bache['und'][0]['value'] == 1){
+						$diagnostic = 'Présence de corrosion dans la bâche, vérifier la dose du réducteur d\'oxygène et/ou le point d\'injection.';
+					}
+					elseif ($node->field_bache['und'][0]['value'] == 2){
+						$diagnostic = 'Vérifier la présence de fer dans l\'eau brute.';
+					}
+				}
+			}
+			
+			//Limiter le cas d'ambiguité:
+			else{
+				if (!isset($node->field_retourcndnst_fer['und'][0]['value']) && in_array(array ("value" => '3'), $node->field_configuration['und'])){
+					$diagnostic = 'Vérifier le fer du retour condensat.';
+				}
+				elseif(!isset($node->field_eauadoucie_fer['und'][0]['value'])){
+					$diagnostic = 'Vérifier le fer de l\'eau adoucie.';
+
+				}
+			}			
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';			
+		}
+		
+		
+		if ($diagnostic == 'Valeur conforme.'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+		elseif ($diagnostic == '-'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+		else{//$diagnostic a été recommandé
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;			
+		}
+		
+	}
+	elseif ($parameter == 'field_bachechauff_temperature'){
+		if ($node->{$parameter}['und'][0]['value'] <=50){
+			if (isset($node->field_configuration['und'])){
+				if (in_array(array ("value" => '2'), $node->field_configuration['und'])){
+					$diagnostic ='Vérifier le fonctionnement de la boucle chauffage bâche.'; 
+				}
+				else{
+					$diagnostic = 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.';
+				}
+			}
+			else{
+				$diagnostic = 'Mettre en place une boucle de chauffage bâche et/ou améliorer les retours condensats.';
+			}
+		}
+		elseif ($node->{$parameter}['und'][0]['value'] >=105){
+			if (isset($node->field_configuration['und'])){
+				if (in_array(array ("value" => '2'), $node->field_configuration['und'])){
+					$diagnostic = 'Vérifier la température de la bâche, et s\'assurer du bon fonctionnement de la boucle chauffage.';
+				}
+				else{
+					$diagnostic = 'Vérifier l\'ultime présence de vapeur flash dans les retours condensats.';
+				}
+			}
+			else{
+				$diagnostic = 'Vérifier l\'ultime présence de vapeur flash dans les retours condensats.';
+			}
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';			
+		}
+		
+		if ($diagnostic == 'Valeur conforme.'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+		elseif ($diagnostic == '-'){
+			_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic);
+		}
+		else{//$diagnostic a été affecté
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;			
+		}
+	}
+	elseif ($parameter == 'field_chaudiere1_conduct' or $parameter == 'field_chaudiere2_conduct'  or $parameter == 'field_chaudiere3_conduct'  or $parameter == 'field_chaudiere4_conduct'){		
+		if ($node->{$parameter}['und'][0]['value'] >5800 and $node->{$parameter}['und'][0]['value'] < 10000 ){
+			$diagnostic = 'Le taux de concentration de la chaudière est élevé, augmenter la fréquence de la purge chaudière.';
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+		}
+		elseif ($node->{$parameter}['und'][0]['value'] > 10000 ){
+			$diagnostic = 'Le taux de concentration de la chaudière est élevé, augmenter la fréquence de la purge chaudière. <font color="#ff0000">Vidanger et renouveler l\'eau de la chaudière.</font>';
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+		}
+		elseif ($node->{$parameter}['und'][0]['value'] < 3000 ){
+			$diagnostic = 'Réduire la fréquence de la purge chaudière.';
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+		}		
+		else{
+			$diagnostic = 'Valeur conforme.';
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'Valeur conforme.'):null;
+		}
+		if ($diagnostic == '-'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+	}
+	elseif ($parameter == 'field_chaudiere1_salinite' or $parameter == 'field_chaudiere2_salinite' or $parameter == 'field_chaudiere3_salinite' or $parameter == 'field_chaudiere4_salinite'){
+		
+		if($node->{$parameter}['und'][0]['value'] > 4060){
+			$diagnostic = 'Le taux de concentration de la chaudière est élevé, augmenter la fréquence de la purge chaudière.';
+		}
+		elseif ($node->{$parameter}['und'][0]['value'] < 2100){
+			$diagnostic = 'Réduire la fréquence de la purge chaudière.';
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';
+		}
+
+		if ($diagnostic == '-'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+		else{
+			$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;		
+		}
+	}
+		
+	elseif ($parameter == 'field_chaudiere1_fer' or $parameter == 'field_chaudiere2_fer' or $parameter == 'field_chaudiere3_fer' or $parameter == 'field_chaudiere4_fer'){
+		if ($parameter == 'field_chaudiere1_fer'){
+			$field_chaudiere_sulfite = 'field_chaudiere1_sulfite';
+		}
+		elseif ($parameter == 'field_chaudiere2_fer'){
+			$field_chaudiere_sulfite = 'field_chaudiere2_sulfite';
+		}
+		elseif ($parameter == 'field_chaudiere3_fer'){
+			$field_chaudiere_sulfite = 'field_chaudiere3_sulfite';
+		}
+		else{
+			$field_chaudiere_sulfite = 'field_chaudiere4_sulfite';
+		}
+
+		if($node->{$parameter}['und'][0]['value'] > 1){
+			
+			//Piste 1
+			if (isset ($node->{$field_chaudiere_sulfite}['und'][0]['value'])){
+				if ($node->{$field_chaudiere_sulfite}['und'][0]['value'] >= 1){
+					//Piste 1.1 Vérification du fer dans le retour condensat.
+					if (isset ($node->field_retourcndnst_fer['und'][0]['value'])){
+						_check_and_write ($node,'field_retourcndnst_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table, 0);
+						if ($diagnostic=='Valeur conforme.'){
+							//Piste 1.2 Fer retour condensat OK, on vérifie le fer dans la bâche chaufferie.
+							$diagnostic='-';
+							if (isset ($node->field_bachechauff_fer['und'][0]['value'])){
+								_check_and_write ($node,'field_bachechauff_fer',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table, 0);
+							}
+							//Limiter les cas d'ambiguité
+							else{
+								$diagnostic = 'Vérifier le Fer au niveau de la Bâche Chaufferie.';
+								$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+								$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;								
+							}
+							
+							if ($diagnostic=='Valeur conforme.'){
+								$diagnostic='-';
+							}
+							elseif ($diagnostic!='-'){
+								$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+								$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;								
+							}
+						}
+						elseif ($diagnostic!='-'){
+							$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+							$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+						}
+					}
+					//Limiter les cas d'ambiguité
+					else{
+						if (!isset ($node->field_retourcndnst_fer['und'][0]['value']) && in_array(array ("value" => '3'), $node->field_configuration['und'])){
+							$diagnostic = 'Vérifier le Fer au niveau du Retour Condensat.';
+							$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+							$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+						}
+					}
+				}	
+				elseif ($node->{$field_chaudiere_sulfite}['und'][0]['value'] < 1 and $node->{$field_chaudiere_sulfite}['und'][0]['value'] > 0){
+					//Vérification de la conductivité dans la chaudière.
+					//$parameter == 'field_chaudiere1_fer'?$field_chaudiere_conduct = 'field_chaudiere1_conduct':$field_chaudiere_conduct = 'field_chaudiere2_conduct';					
+					if ($parameter == 'field_chaudiere1_fer'){
+						$field_chaudiere_conduct = 'field_chaudiere1_conduct';
+					}
+					elseif($parameter == 'field_chaudiere2_fer'){
+						$field_chaudiere_conduct = 'field_chaudiere2_conduct';
+					}
+					elseif($parameter == 'field_chaudiere3_fer'){
+						$field_chaudiere_conduct = 'field_chaudiere3_conduct';
+					}
+					else{
+						$field_chaudiere_conduct = 'field_chaudiere4_conduct';
+					}
+					if (isset ($node->{$field_chaudiere_conduct}['und'][0]['value'])){
+						_check_and_write ($node,$field_chaudiere_conduct,$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table, 0);
+						if ($diagnostic=='Valeur conforme.'){
+							$diagnostic='-';
+						}
+						elseif ($diagnostic!='-'){
+							$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+							$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+						}						
+					}
+					else {
+						$diagnostic = 'Vérifier la Conductivité au niveau de la Chaudière.';
+						$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+						$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;						
+					}
+				}
+				elseif ($node->{$field_chaudiere_sulfite}['und'][0]['value'] == 0){
+					//Vérification de la température dans la bâche chaufferie.
+					if (isset($node->field_bachechauff_temperature['und'][0]['value'])){
+						_check_and_write ($node,'field_bachechauff_temperature',$presentation_pdf,$line_id,$recommandations,$reco_id, $diagnostic, $reco_table, 0);
+					}
+					else{
+						//Limiter le cas d'ambiguité:
+						$flag==1?_check_reco ($recommandations, $reco_id, 'Vérifier le sulfite de la chaudière.', $reco_table ):null;
+						$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+					}
+					if ($diagnostic=='Valeur conforme.'){
+						//$diagnostic = 'Augmenter le dosage du produit de traitement.';
+						$diagnostic = 'Augmenter le réglage de la pompe doseuse du produit du traitement.';
+					}
+					elseif ($diagnostic=='-'){
+						$diagnostic = 'Vérifier la Température du bâche et/ou augmenter dosage du produit de traitement.';
+					}
+					$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+					$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+				}
+			}
+			else{
+				//Limiter le cas d'ambiguité:
+				$flag==1?_check_reco ($recommandations, $reco_id, 'Vérifier le sulfite dans la chaudière.', $reco_table ):null;
+				$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;
+			}	
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+		if ($diagnostic == '-'){
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+		}
+	}
+	elseif ($parameter == 'field_chaudiere1_ph' or $parameter == 'field_chaudiere2_ph'  or $parameter == 'field_chaudiere3_ph'  or $parameter == 'field_chaudiere4_ph' ){
+		if ($parameter == 'field_chaudiere1_ph'){
+			$field_chaudiere_conduct = 'field_chaudiere1_conduct';
+			$field_chaudiere_salinite = 'field_chaudiere1_salinite';
+		}
+		elseif ($parameter == 'field_chaudiere2_ph'){
+			$field_chaudiere_conduct = 'field_chaudiere2_conduct';
+			$field_chaudiere_salinite = 'field_chaudiere2_salinite';	
+		}
+		elseif ($parameter == 'field_chaudiere3_ph'){
+			$field_chaudiere_conduct = 'field_chaudiere3_conduct';
+			$field_chaudiere_salinite = 'field_chaudiere3_salinite';	
+		}		
+		elseif ($parameter == 'field_chaudiere4_ph'){
+			$field_chaudiere_conduct = 'field_chaudiere4_conduct';
+			$field_chaudiere_salinite = 'field_chaudiere4_salinite';	
+		}
+				
+		if($node->{$parameter}['und'][0]['value'] < 10 or $node->{$parameter}['und'][0]['value'] > 12){
+			if (isset ($node->{$field_chaudiere_conduct}['und'][0]['value'])){
+				$field_chaudiere_conduct = $node->{$field_chaudiere_conduct}['und'][0]['value'];
+			}
+			else {
+				$field_chaudiere_conduct = -1 ;
+			}
+
+			if (isset ($node->{$field_chaudiere_salinite}['und'][0]['value'])){
+				$field_chaudiere_salinite = $node->{$field_chaudiere_salinite}['und'][0]['value'];
+			}
+			else {
+				$field_chaudiere_salinite = -1 ;			
+			}
+			
+			if ($node->{$parameter}['und'][0]['value'] < 10){
+				if ($field_chaudiere_conduct <= 4200 and $field_chaudiere_conduct != -1  or $field_chaudiere_salinite <= 2940 and $field_chaudiere_conduct != -1){
+					$diagnostic = 'Réduire la fréquence de la purge chaudière.';		
+				}
+				elseif ($field_chaudiere_conduct > 4200 or $field_chaudiere_salinite > 2940 ){
+					$diagnostic = 'Augmenter le réglage de la pompe doseuse du produit de traitement.';
+				}
+				elseif ($field_chaudiere_conduct == -1 and $field_chaudiere_salinite == -1 ){
+					$diagnostic = 'Vérifier la conductivité et/ou la salinité de la chaudière.';
+				}
+			}
+			elseif ($node->{$parameter}['und'][0]['value'] > 12){
+				if ($field_chaudiere_conduct <= 5800 and $field_chaudiere_conduct != -1  or $field_chaudiere_salinite <= 4060 and $field_chaudiere_salinite != -1){
+					$diagnostic = 'Réduire le réglage de la pompe doseuse du produit de traitement.';			
+				}
+				elseif ($field_chaudiere_conduct > 5800 or $field_chaudiere_salinite > 4060){
+					$diagnostic = 'Le taux de concentration de la chaudière est élevé, augmenter la fréquence de la purge chaudière.';
+				}
+				elseif ($field_chaudiere_conduct == -1 and $field_chaudiere_salinite == -1 ){
+					$diagnostic = 'Vérifier la conductivité et/ou la salinité de la chaudière.';
+				}
+			}
+			
+			if ($diagnostic != '-'){
+				$flag==1?_check_reco ($recommandations, $reco_id, $diagnostic, $reco_table ):null;
+				$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,'c.f. recom. n°'.$reco_id):null;		
+			}
+			else{//$diagnostic == '-'
+				$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;
+			}
+		}
+		else{
+			$diagnostic = 'Valeur conforme.';
+			$flag==1?_pdf_auto ($node,$presentation_pdf, $line_id,$parameter, 1,$diagnostic):null;	
+		}
+	}
+	
+}
+
+function _pdf_auto ($node,&$presentation_pdf, &$line_id,$parameter, $usecase=0,$remark='-'){
+
+	$parameter_config = array(
+	'field_eauadoucie_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),
+	'field_eauadoucie_conductivite'=> array ('threshold' => '<=5000', 'unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_eauadoucie_salinite'=> array ('threshold' => '<=2500','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_eauadoucie_ph'=> array ('threshold' => '>=7','unit' => '', 'label' => 'PH'),
+	'field_eauadoucie_ta'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TA'),
+	'field_eauadoucie_tac'=> array ('threshold' => '<=120','unit' => '°F', 'label' => 'TAC'),
+	'field_eauadoucie_th'=> array ('threshold' => '<=0.5','unit' => '°F', 'label' => 'TH'),
+	'field_eauadoucie_hydroxyde'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Hydroxyde'),
+	'field_eauadoucie_carbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Carbonate'),
+	'field_eauadoucie_bicarbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Bicarbonate'),
+	'field_eauadoucie_fer'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_eauadoucie_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_bachechauff_temperature'=> array ('threshold' => '50-105','unit' => '°C', 'label' => 'Température'),
+	'field_bachechauff_conductivite'=> array ('threshold' => '<=4000','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_bachechauff_salinite'=> array ('threshold' => '<=2000','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_bachechauff_ph'=> array ('threshold' => '>= 8.5','unit' => '', 'label' => 'PH'),	
+	'field_bachechauff_ta'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TA'),
+	'field_bachechauff_tac'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TAC'),
+	'field_bachechauff_th'=> array ('threshold' => '<= 0.5','unit' => '°F', 'label' => 'TH'),	
+	'field_bachechauff_hydroxyde'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Hydroxyde'),
+	'field_bachechauff_carbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Carbonate'),
+	'field_bachechauff_bicarbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Bicarbonate'),
+	'field_bachechauff_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),	
+	'field_bachechauff_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_bachechauff_sulfite'=> array ('threshold' => '>=10','unit' => 'mg/l', 'label' => 'Sulfite'),
+	'field_chaudiere1_tconcentration'=> array ('threshold' => '-','unit' => '', 'label' => 'Taux de Concentration'),
+	'field_chaudiere1_pression'=> array ('threshold' => '-','unit' => 'bar', 'label' => 'Pression'),
+	'field_chaudiere1_conduct'=> array ('threshold' => '3000-5800','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_chaudiere1_salinite'=> array ('threshold' => '2100-4060','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_chaudiere1_ph'=> array ('threshold' => '10-12','unit' => '', 'label' => 'PH'),
+	'field_chaudiere1_ta'=> array ('threshold' => '<=85','unit' => '°F', 'label' => 'TA'),
+	'field_chaudiere1_tac'=> array ('threshold' => '<=120','unit' => '°F', 'label' => 'TAC'),
+	'field_chaudiere1_th'=> array ('threshold' => '<=0.5','unit' => '°F', 'label' => 'TH'),
+	'field_chaudiere1_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),
+	'field_chaudiere1_hydroxyde'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Hydroxyde'),
+	'field_chaudiere1_carbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Carbonate'),
+	'field_chaudiere1_bicarbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Bicarbonate'),
+	'field_chaudiere1_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_chaudiere1_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_chaudiere1_sulfite'=> array ('threshold' => '>=10','unit' => 'mg/l', 'label' => 'Sulfite'),
+	'field_chaudiere2_tconcentration'=> array ('threshold' => '-','unit' => '', 'label' => 'Taux de Concentration'),	
+	'field_chaudiere2_pression'=> array ('threshold' => '-','unit' => 'bar', 'label' => 'Pression'),
+	'field_chaudiere2_conduct'=> array ('threshold' => '3000-5800','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_chaudiere2_salinite'=> array ('threshold' => '2100-4060','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_chaudiere2_ph'=> array ('threshold' => '10-12','unit' => '', 'label' => 'PH'),
+	'field_chaudiere2_ta'=> array ('threshold' => '<=85','unit' => '°F', 'label' => 'TA'),
+	'field_chaudiere2_tac'=> array ('threshold' => '<=120','unit' => '°F', 'label' => 'TAC'),
+	'field_chaudiere2_th'=> array ('threshold' => '<=0.5','unit' => '°F', 'label' => 'TH'),	
+	'field_chaudiere2_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),
+	'field_chaudiere2_hydroxyde'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Hydroxyde'),
+	'field_chaudiere2_carbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Carbonate'),
+	'field_chaudiere2_bicarbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Bicarbonate'),
+	'field_chaudiere2_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_chaudiere2_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_chaudiere2_sulfite'=> array ('threshold' => '>=10','unit' => 'mg/l', 'label' => 'Sulfite'),	
+	'field_chaudiere3_tconcentration'=> array ('threshold' => '-','unit' => '', 'label' => 'Taux de Concentration'),	
+	'field_chaudiere3_pression'=> array ('threshold' => '-','unit' => 'bar', 'label' => 'Pression'),
+	'field_chaudiere3_conduct'=> array ('threshold' => '3000-5800','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_chaudiere3_salinite'=> array ('threshold' => '2100-4060','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_chaudiere3_ph'=> array ('threshold' => '10-12','unit' => '', 'label' => 'PH'),
+	'field_chaudiere3_ta'=> array ('threshold' => '<=85','unit' => '°F', 'label' => 'TA'),
+	'field_chaudiere3_tac'=> array ('threshold' => '<=120','unit' => '°F', 'label' => 'TAC'),
+	'field_chaudiere3_th'=> array ('threshold' => '<=0.5','unit' => '°F', 'label' => 'TH'),	
+	'field_chaudiere3_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),
+	'field_chaudiere3_hydroxyde'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Hydroxyde'),
+	'field_chaudiere3_carbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Carbonate'),
+	'field_chaudiere3_bicarbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Bicarbonate'),
+	'field_chaudiere3_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_chaudiere3_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_chaudiere3_sulfite'=> array ('threshold' => '>=10','unit' => 'mg/l', 'label' => 'Sulfite'),	
+	'field_chaudiere4_tconcentration'=> array ('threshold' => '-','unit' => '', 'label' => 'Taux de Concentration'),	
+	'field_chaudiere4_pression'=> array ('threshold' => '-','unit' => 'bar', 'label' => 'Pression'),
+	'field_chaudiere4_conduct'=> array ('threshold' => '3000-5800','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_chaudiere4_salinite'=> array ('threshold' => '2100-4060','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_chaudiere4_ph'=> array ('threshold' => '10-12','unit' => '', 'label' => 'PH'),
+	'field_chaudiere4_ta'=> array ('threshold' => '<=85','unit' => '°F', 'label' => 'TA'),
+	'field_chaudiere4_tac'=> array ('threshold' => '<=120','unit' => '°F', 'label' => 'TAC'),
+	'field_chaudiere4_th'=> array ('threshold' => '<=0.5','unit' => '°F', 'label' => 'TH'),	
+	'field_chaudiere4_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),
+	'field_chaudiere4_hydroxyde'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Hydroxyde'),
+	'field_chaudiere4_carbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Carbonate'),
+	'field_chaudiere4_bicarbonate'=> array ('threshold' => '-','unit' => '°F', 'label' => 'Bicarbonate'),
+	'field_chaudiere4_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_chaudiere4_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_chaudiere4_sulfite'=> array ('threshold' => '>=10','unit' => 'mg/l', 'label' => 'Sulfite'),		
+	'field_retourcndnst_temperature'=> array ('threshold' => '-','unit' => '°C', 'label' => 'Température'),	
+	'field_retourcndnst_conduct'=> array ('threshold' => '<=50','unit' => 'uS/cm²', 'label' => 'Conductivité'),
+	'field_retourcndnst_salinite'=> array ('threshold' => '<=25','unit' => 'mg/l', 'label' => 'Salinité'),
+	'field_retourcndnst_ph'=> array ('threshold' => '>=8.3','unit' => '', 'label' => 'PH'),
+	'field_retourcndnst_fer'=> array ('threshold' => '<=1','unit' => 'mg/l', 'label' => 'Fer'),
+	'field_retourcndnst_chlorure'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Chlorure'),
+	'field_retourcndnst_th'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TH'),
+	'field_retourcndnst_hydroxyde'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Hydroxyde'),
+	'field_retourcndnst_carbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Carbonate'),
+	'field_retourcndnst_bicarbonate'=> array ('threshold' => '-','unit' => 'mg/l', 'label' => 'Bicarbonate'),
+	'field_retourcndnst_ta'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TA'),
+	'field_retourcndnst_tac'=> array ('threshold' => '-','unit' => '°F', 'label' => 'TAC'),
+		
+	
+	'field_volume_bac_antiscalant' => array ('threshold' => '-','unit' => 'l', 'label' => 'Volume Bac Antiscalant'),
+	'field_debit_max_pomp' => array ('threshold' => '-','unit' => 'l/h', 'label' => 'Db max pmp antiscal'),
+	'field_th_apres_adoucisseur' => array ('threshold' => '-','unit' => '°F', 'label' => 'TH après adoucisseur'),
+	'field_indice_langelier' => array ('threshold' => '-','unit' => '-', 'label' => 'Indice Langelier'),
+	'field_conductivite_entree' => array ('threshold' => '-','unit' => 'µS/cm2', 'label' => 'Conductivité entrée'),
+	'field_debit_permeat' => array ('threshold' => '-','unit' => 'm3/h', 'label' => 'Débit permeat'),
+	'field_debit_rejet' => array ('threshold' => '-','unit' => 'm3/h', 'label' => 'Débit rejet'),
+	'field_conductivite_permeat' => array ('threshold' => '-','unit' => 'µS/cm2', 'label' => 'Conductivité permeat'),
+	'field_nbr_hrs_fonctionnement' => array ('threshold' => '-','unit' => 'h/j', 'label' => 'Nbr heures fonct°'),
+	'field_pression_hp' => array ('threshold' => '>= 8 ou <=20','unit' => 'bar', 'label' => 'Pression HP'),
+	'field_difference_pression' => array ('threshold' => '-','unit' => 'bar', 'label' => 'Différence de Pression'),
+	'field_debit_entree' => array ('threshold' => '-','unit' => 'm3/h', 'label' => 'Débit entrée'),
+	'field_rendement' => array ('threshold' => '-','unit' => '-', 'label' => 'Rendement'),
+	'field_efficacite' => array ('threshold' => '-','unit' => '-', 'label' => 'Efficacité'),
+	'field_volume_journalier_eau_brut' => array ('threshold' => '-','unit' => 'm3', 'label' => 'Vol./jour Eau Brute'),
+	'field_volume_journalier_antiscal' => array ('threshold' => '-','unit' => 'm3', 'label' => 'Vol./jour Antiscalant'),
+	'field_dose_as461' => array ('threshold' => '-','unit' => 'l', 'label' => 'Dose AS461'),
+	'field_reglage_pompe' => array ('threshold' => '-','unit' => '%', 'label' => 'Réglage pompe'),	
+	'field_pression_entree' => array ('threshold' => '>=2','unit' => 'bar', 'label' => 'Pression d\'entrée'),
+	'field_concentration_preparation' => array ('threshold' => '-','unit' => '%', 'label' => 'Concent° de préparat°'),
+	'field_pression_rejet' => array ('threshold' => '-','unit' => 'bar', 'label' => 'Pression Rejet'),
+	
+	'field_injection_javel' => array ('threshold' => '-','unit' => '-', 'label' => 'Avec Injection Javel'),
+	'field_avec_adoucisseur' => array ('threshold' => '-','unit' => '-', 'label' => 'Avec adoucisseur'),
+	'field_avec_antiscalant' => array ('threshold' => '-','unit' => '-', 'label' => 'Avec antiscalant'),
+	'field_filtre_charbon' => array ('threshold' => '-','unit' => '-', 'label' => 'Avec filtre charbon'),
+	'field_metabisulfite' => array ('threshold' => '-','unit' => '-', 'label' => 'Aven metabisulfite')	
+	);
+	$unit = ' '.$parameter_config [$parameter]['unit'];
+	$parameter_name = $parameter_config [$parameter]['label'];
+	$threshold = $parameter_config [$parameter]['threshold'];
+	if ($usecase==0){//A new reco will be used.
+		if (isset ($node->{$parameter}['und'][0]['value'])){
+			$line_id++;
+			$presentation_pdf [] = array ('value'=> implode ('|',array(
+				$line_id,
+				$parameter_name,			
+				sprintf ('%.2f', $node->{$parameter}['und'][0]['value']).$unit,
+				$threshold,
+				$remark
+				))
+			);
+		}		
+	}
+	elseif($usecase==1){//An existing reco will be used.
+		//if (!isset ($node->{$parameter}['und'][0]['value'])){
+		//	//dpm ($parameter);
+		//	watchdog('aquaheat', 'interview 77:'.$parameter.'--'.$line_id.'--'.$parameter_name.'--'.$unit.'--'.$threshold.'--'.$remark);
+		//ob_start();
+		//var_dump($node);
+		//$dumpy = ob_get_clean();
+		//watchdog ('aquaheat','Reset interview 88:'.$dumpy);
+		//
+		//}
+		if (!in_array ($parameter,array ('field_injection_javel' ,'field_avec_adoucisseur','field_avec_antiscalant','field_filtre_charbon','field_metabisulfite' ))){
+			$parameter_value = sprintf ('%.2f', $node->{$parameter}['und'][0]['value']).$unit;
+			
+		}
+		else{
+			if ($node->{$parameter}['und'][0]['value']){
+				$parameter_value = "Oui";
+			}
+			else{
+				$parameter_value = "Non";
+			}
+		}
+		$presentation_pdf [] = array ('value'=> implode ('|',array(
+			$line_id,
+			$parameter_name,			
+			$parameter_value,
+			$threshold,
+			$remark
+			))
+		);			
+
+	}
+}
+	
+function _compute_element (&$output, $ta=0, $tac=0,$usecase=''){
+	//Hydroxyde
+	
+	if ($usecase=='hydroxyde'){
+		if ($ta>$tac/2){$output =2*$ta-$tac;}
+		else{
+			$output=0;
+		}
+	}
+	//Carbonate
+	elseif ($usecase=='carbonate'){
+		$output =0;
+		if(0<$ta and $ta<=$tac/2) { $output +=  2*$ta;}
+		if($ta>$tac/2) { $output +=  2*($tac-$ta);}
+	}
+	
+	//Bicarbonate
+	elseif ($usecase=='bicarbonate'){
+		$output=0;
+		if(0<=$ta and $ta <=$tac/2) { $output =  $tac-2*$ta; }
+		if($ta=0) { $output +=  $tac;}
+	}
+	
+	//Pression
+	elseif ($usecase=='pression'){
+		$output = 100 * pow ($ta,0.25);
+	}
+	
+	//Taux de concentration
+	elseif ($usecase=='taux_concentration'){
+		if ($tac!=0){
+			$output = $ta / $tac;
+		}
+		else{
+			$output = 0;
+		}
+	}
+	//Débit entrée
+	elseif ($usecase=='debit_entree'){
+		$output = $ta['field_debit_permeat']+$ta['field_debit_rejet'];
+	}
+	elseif ($usecase=='rendement'){
+		$output = $ta['field_debit_permeat']/$ta['field_debit_entree'];
+	}
+	elseif ($usecase=='efficacite'){
+		$output = 1- $ta['field_conductivite_permeat']/$ta['field_conductivite_entree'];
+	}
+	elseif ($usecase=='volume_journalier_eau_brute'){
+		$output = $ta['field_debit_entree'] * $ta['field_nbr_hrs_fonctionnement'];
+	}
+	elseif ($usecase=='volume_journalier_antiscal'){
+		$output = $ta['field_debit_max_pomp'] * $ta['field_nbr_hrs_fonctionnement'];
+	}
+	elseif ($usecase=='dose_as461'){
+		$output = $ta['field_volume_bac_antiscalant'] /($ta['field_volume_journalier_antiscal'] * $ta['field_volume_journalier_eau_brut']);
+	}
+	elseif ($usecase=='reglage_pompe'){
+		$output = min((($ta['field_volume_bac_antiscalant'] / 48) / $ta['field_debit_max_pomp']) * 100,100);
+	}
+	elseif ($usecase=='concentration_preparation'){
+		$reglage_pompe =  (($ta['field_volume_bac_antiscalant'] / 48) / $ta['field_debit_max_pomp']) * 100;
+		if ($reglage_pompe>100){
+		/*ob_start();
+		var_dump($view);
+		$dumpy = ob_get_clean();
+		watchdog('aquaheat', 'View Structure:'.$dumpy);*/
+			watchdog('aquaheat', 'field_volume_bac_antiscalant');	
+			$field_volume_bac_antiscalant = $ta['field_debit_max_pomp'] * 48;
+			//=3*48
+			//60*2/(3*48)*100
+			$output = (($ta['field_volume_journalier_antiscal'] * 2) / $field_volume_bac_antiscalant) * 100;
+		}
+		else{
+			$output = (($ta['field_volume_journalier_antiscal'] * 2) / $ta['field_volume_bac_antiscalant']) * 100;
+			watchdog('aquaheat', 'field_volume_bac_antiscalant2');
+		}
+	}
+	elseif ($usecase=='pression_rejet'){
+		$output = $ta['field_pression_hp'] - $ta['field_difference_pression'];
+	}	
+}
+function aquaheat_node_insert($node){
+	
+	//watchdog('aquaheat', 'interview 77:');	
+	if($node->type=="rapport_technique"){
+
+		//watchdog('talentinside', 'interview 88:');	
+		
+		//$mail = 'technique@aquaheat.com.tn'; // Déclaration de l'adresse de destination.
+		$societe_user = user_load($node->field_societe["und"][0]['target_id']);
+		$mail = $societe_user->mail; // Déclaration de l'adresse de destination.
+
+		$passage_ligne = "\n";
+		
+/*
+1|Rapport d'analyse d'eau chaufferie
+2|Rapport réglage combustion
+3|Autres rapports
+field_categorie
+*/
+		if ($node->field_categorie['und'][0]["value"] == "1"){
+			$mensuel = 'mensuel';
+		}
+		else{
+			$mensuel = '';
+		}
+
+		//=====Déclaration des messages au format texte et au format HTML.
+		$message_html = '<p>Madame, Monsieur,<strong><br /></strong></p>'.
+		'<p>Nous venons de d&eacute;poser le rapport de suivi '.$mensuel.' sur votre compte Aquaheat accessible via ce <a href="http://www.aquaheat.com.tn/fr/user">lien</a>.<br /> <br /> Nous restons &agrave; votre disposition pour apporter tout compl&eacute;ment d\'informations.<br /> <br /> Bien Cordialement,<br /> Le D&eacute;partement Technique</p>'.
+		'<p><strong>T&eacute;l:</strong> (+216) 93 910 600<br /><strong>Fax:</strong> (+216) 71 426 881<br /><strong>Adresse:</strong>4 Rue Tamara - 2014 Megrine Riadh</p>';
+		//==========
+		 
+		//=====Création de la boundary
+		$boundary = "-----=".md5(rand());
+		//==========
+		 
+		//=====Définition du sujet.
+		//$sujet = "Business Content Validation";
+		$sujet = $node->title;
+		//=========
+		 //$node->field_date_completee[$node->language][0]['value']
+		 //$node->title
+		 //
+		 
+		 
+		//=====Création du header de l'e-mail.
+		$header = "From: \"Aquaheat\"<technique@aquaheat.com.tn>".$passage_ligne;
+		
+		$header.= "Reply-to: \"Aquaheat\" <technique@aquaheat.com.tn>".$passage_ligne;
+		$header .= "Cc: \"Aquaheat\" <technique@aquaheat.com.tn>".$passage_ligne;	
+		$header.= "MIME-Version: 1.0".$passage_ligne;
+		$header.= "Content-Type: multipart/alternative;".$passage_ligne." boundary=\"$boundary\"".$passage_ligne;
+		//==========
+		 
+		//=====Création du message.
+		$message = $passage_ligne."--".$boundary.$passage_ligne;
+
+		
+		//=====Ajout du message au format HTML
+		$message.= "Content-Type: text/html; charset=\"ISO-8859-1\"".$passage_ligne;
+		$message.= "Content-Transfer-Encoding: 8bit".$passage_ligne;
+		$message.= $passage_ligne.$message_html.$passage_ligne;
+		//==========
+		$message.= $passage_ligne."--".$boundary."--".$passage_ligne;
+		$message.= $passage_ligne."--".$boundary."--".$passage_ligne;
+		//==========
+		 
+		//=====Envoi de l'e-mail.
+		//Désactiver temporairement l'envoi des mails
+		mail($mail,$sujet,$message,$header);
+		//==========
+	}	
+	elseif ($node->type=="releve"){
+		//$mail = 'technique@aquaheat.com.tn';
+		//$mail = 'webmaster@aquaheat.com.tn';
+		$mail = 'contact.aquaheat@gmail.com';
+		
+		
+		$passage_ligne = "\n";
+
+		//=====Déclaration des messages au format texte et au format HTML.
+		$message_html = '<p>Bonjour,<strong><br /></strong></p>'.
+		'<p>Un nouveau relev&eacute; vient d\'&ecirc;tre saisi pour la soci&eacute;t&eacute; '.$node->field_reference_societe['und'][0]["value"].'.<br/> Veuillez proc&eacute;der &agrave; la validation du relev&eacute;.<br/></p>'.
+		'<p><strong>T&eacute;l:</strong> (+216) 93 910 600<br /><strong>Fax:</strong> (+216) 71 426 881<br /><strong>Adresse:</strong>4 Rue Tamara - 2014 Megrine Riadh</p>';
+		//==========
+		 
+		//=====Création de la boundary
+		$boundary = "-----=".md5(rand());
+		//==========
+		 
+		//=====Définition du sujet.
+		$sujet = $node->title;
+		 
+		 
+		//=====Création du header de l'e-mail.
+		$header = "From: \"Aquaheat\"<contact@aquaheat.com.tn>".$passage_ligne;
+		
+		
+		$header.= "Reply-to: \"Aquaheat\" <contact@aquaheat.com.tn>".$passage_ligne;
+
+		
+		//$header .= "Cc: \"Aquaheat\" <technique@aquaheat.com.tn>".$passage_ligne;	
+
+		$header.= "MIME-Version: 1.0".$passage_ligne;
+		$header.= "Content-Type: multipart/alternative;".$passage_ligne." boundary=\"$boundary\"".$passage_ligne;
+		//==========
+		 
+		//=====Création du message.
+		$message = $passage_ligne."--".$boundary.$passage_ligne;
+
+		
+		//=====Ajout du message au format HTML
+		$message.= "Content-Type: text/html; charset=\"ISO-8859-1\"".$passage_ligne;
+		$message.= "Content-Transfer-Encoding: 8bit".$passage_ligne;
+		$message.= $passage_ligne.$message_html.$passage_ligne;
+		//==========
+		$message.= $passage_ligne."--".$boundary."--".$passage_ligne;
+		$message.= $passage_ligne."--".$boundary."--".$passage_ligne;
+		//==========
+		 
+		//=====Envoi de l'e-mail.
+		//Désactiver temporairement l'envoi des mails
+		$result= mail($mail,$sujet,$message,$header);
+
+		//==========
+	}
+}
+
+
+
+function aquaheat_node_validate($node, $form, &$form_state){
+	if ($node->type=="releve"){
+		if (isset ($node->field_eauadoucie_ta['und'][0]['value'])){
+			if ($node->field_eauadoucie_ta['und'][0]['value'] != 0){
+				if (isset ($node->field_eauadoucie_tac['und'][0]['value'])){
+					if ($node->field_eauadoucie_tac['und'][0]['value'] == 0){
+						form_set_error('field_eauadoucie_tac', t('Si le parapmètre TA est non nul, le paramètre TAC le doit être aussi non nul.'));
+					}				
+				}
+				else{
+					form_set_error('field_eauadoucie_ta', t('Si le parapmètre TA est non nul, le paramètre TAC le doit être aussi non nul.'));
+				}
+			}
+		}
+		check_conductivite_salinite ($node,'field_eauadoucie_conductivite','field_eauadoucie_salinite');
+		check_conductivite_salinite ($node,'field_bachechauff_conductivite','field_bachechauff_salinite');
+		check_conductivite_salinite ($node,'field_chaudiere1_conduct','field_chaudiere1_salinite');
+		check_conductivite_salinite ($node,'field_chaudiere2_conduct','field_chaudiere2_salinite');
+		check_conductivite_salinite ($node,'field_chaudiere3_conduct','field_chaudiere3_salinite');
+		check_conductivite_salinite ($node,'field_chaudiere4_conduct','field_chaudiere4_salinite');
+		check_conductivite_salinite ($node,'field_retourcndnst_conduct','field_retourcndnst_salinite');
+		
+		//Pour continuer: il faut rendre la date obligatoire.
+		//Vérifier qu'aucun releve n'a été saisi pour la même date
+		$field_period = date ('Y-m-d', strtotime($node->field_period['und'][0]['value']));
+		$beginning_date = $field_period.' 00:00:00';
+		$ending_date =  $field_period.' 23:59:59';		
+		//watchdog('aquaheat', 'Date Intervals:'.$beginning_date.' '.$ending_date);
+		
+		$query = new EntityFieldQuery;
+		$query->entityCondition('entity_type', 'node')
+			->propertyCondition('status', 1)
+			->propertyCondition('type', 'releve', '=')			
+			->fieldCondition('field_societe', 'target_id', $node->field_societe["und"][0]['target_id'], '=')
+			->fieldCondition('field_period', 'value', $beginning_date, '>=', 1)
+			->fieldCondition('field_period', 'value', $ending_date, '<=', 1);
+		$result = $query->execute();
+		
+		if (isset ($result['node'])){
+			if (count($result['node'])>0){
+				
+				$node_list = array_keys ($result['node']);
+				if (isset($node->nid)){
+					$nid = $node->nid;
+				}
+				else{
+					$nid = 0;
+				}
+				if ( in_array ($nid, $node_list) and count ($node_list) > 1 or  !in_array ($nid, $node_list) and count ($node_list) > 0 ){
+					$liste_releve = "";
+					foreach ($node_list as $key => $value){
+						if ($value != $nid){
+							$liste_releve .=  ' '.l('Relevé '.strval ( $key+1), 'node/'.$value);
+						}
+						
+					}
+					
+					form_set_error('field_period', t('Un relevé '.$liste_releve.' est déjà saisi pour la date '.$field_period.'. Veuillez modifier le rapport existant ou saisir une nouvelle date.'));
+					//Date Intervals:array(2) { [432]=> object(stdClass)#156 (3) { ["nid"]=> string(3) "432" ["vid"]=> string(3) "432" ["type"]=> string(6) "releve" } [433]=> object(stdClass)#158 (3) { ["nid"]=> string(3) "433" ["vid"]=> string(3) "433" ["type"]=> string(6) "releve" } }
+					
+				}
+			}
+		}
+
+		//Récupérer la date de prélèvement
+		
+		//Récupérer l'identifiant de la société
+		
+		//Requête BD pour les relevés portant sur la même date et la même société
+		
+		//Comparaison et message d'erreur
+		
+		//Chercher les noeuds 
+		
+		
+		
+	}
+}
+
+function check_conductivite_salinite ($node,$conductivite,$salinite){
+	if (isset ($node->{$conductivite}['und'][0]['value'])and isset($node->{$salinite}['und'][0]['value'] )){
+		if ($node->{$conductivite}['und'][0]['value']!='' and $node->{$salinite}['und'][0]['value']!='' ){		
+			if ($node->{$conductivite}['und'][0]['value'] !=0){
+				$ratio = $node->{$salinite}['und'][0]['value']/$node->{$conductivite}['und'][0]['value'];
+			}
+			else{
+				$ratio = 100000; //+l'infini
+			}
+			
+			if ($ratio >= 0.7 or  $ratio <= 0.5 ){
+				form_set_error($conductivite, t('La valeur de la salinité n\'est pas compatible avec celle de la conductivité.'));
+				watchdog ('aquaheat','ratio:'.$ratio );
+			}
+			else{
+				watchdog ('aquaheat','ratio2:'.$ratio );
+			}
+		}
+	}
+} 
+
+/*
+function aquaheat_views_post_execute(&$view) {
+	if ($view->name == 'rapport_technique'){
+
+	}
+	else{
+		watchdog('aquaheat', 'Other View:'.$view->name);
+	}
+}
+*/
+
+function aquaheat_views_api() {
+  return array('api' => 2, 'path'=> drupal_get_path('module', 'aquaheat'),
+  );
+}
+
+//function aquaheat_views_post_execute(&$view){
+//function aquaheat_views_query_alter(&$view, &$query){
+//function aquaheat_views_query_substitutions ($view){
+function aquaheat_views_post_build(&$view){	
+	if ($view->name == 'rapport_technique'){
+		/*ob_start();
+		var_dump($view);
+		$dumpy = ob_get_clean();
+		watchdog('aquaheat', 'View Structure:'.$dumpy);*/
+	}
+}
+
+
+
+function aquaheat_form_alter(&$form, &$form_state, $form_id) {
+	//drupal_add_css ('sites/all/modules/aquaheat/aquaheat.css','file');		
+	//$form['#attached']['css'] = array(
+	//  drupal_get_path('module', 'aquaheat') . '/aquaheat.css',
+	//);	
+
+	
+	//watchdog('aquaheat', 'form id is :'.$form_id);
+	/*drupal_add_js('sites/all/libraries/pdf.js/build/pdf.worker.js');
+	drupal_add_js('sites/all/libraries/pdf.js/build/pdf.js');
+	drupal_add_js('sites/all/libraries/helloworld/hello4.js');
+
+  
+	//echo $form_id;
+	//exit(-1);*/
+	
+	// This code gets called for every form Drupal builds; use an if statement
+	// to respond only to the user login block and user login forms.
+	if ($form_id == 'rapport_technique_node_form') {
+		if ($form ["changed"]["#default_value"] == null){//We only set title when it is a new form
+			$form ["title"]["#default_value"] = "____";
+		}
+		
+		// Add a dire warning to the top of the login form.
+		/*drupal_add_css ('sites/all/modules/ebook/ebook.css','file');
+		$form['field_kwords']=array(
+			'#type'=>'textfield',
+			'#title'=>t('Key Words'),
+			'#size'=>30,
+			'#required' => false,
+		  );
+
+		$form['field_author']=array(
+			'#type'=>'textfield',
+			'#title'=>t('Book Author'),
+			'#size'=>30,
+			'#required' => false,
+			'#autocomplete_path' => 'ebook/autocomplete/author',
+		  );			  
+		  
+		  $form['title']=array(
+			'#type'=>'textfield',
+			'#title'=>t('Book Title'),
+			'#size'=>30,
+			'#required' => false,
+			'#autocomplete_path' => 'ebook/autocomplete/title',		
+		  );
+
+		$list_categorie =  taxonomy_get_tree(1,0, 1);		
+		$categorie_list = i18n_taxonomy_localize_terms($list_categorie);
+		//print_r ($categorie_list);
+		
+		
+		foreach($categorie_list as $key => $value) {
+			$categorie_field[ $value->tid] = $value->name;
+		}
+		
+		$form['field_book_category']=array(
+			'#type' => 'select',
+			'#options' => $categorie_field,
+			'#default_value' => 0,	
+			'#title'=>t('Book Category'),
+			'#size'=>4,
+			'#required' => false
+		  );		  
+
+
+
+
+		$form['#submit'][] = 'ebook_form_submit';
+		if (count ($form['#validate'])==1){
+			array_shift ( $form['#validate'] );
+			//echo "faza";
+		}
+		$form['basic']['processed_keys']['#value'] = "text";
+		
+		$form['#validate'][] = 'ebook_form_validation';
+		$move_field = $form['basic']['submit'];
+		$form ['submit'] = $move_field;
+		unset ($form['basic']['submit']);
+		//print_r ($form);
+
+		// Change 'Log in' to 'Sign in'.*/
+	}
+	elseif ($form_id == 'releve_node_form') {
+		if ($form ["title"]["#default_value"] == null){//We will set a temporary title, once submitted a final one with customer name will be set.
+			$form ["title"]["#default_value"] = "____";
+		}		
+
+		global $user;
+
+		$form['field_reset_chaudiere']['und']['#ajax'] = array(
+			'event' => 'change',
+			'callback' => 'aquaheat_field_bache_callback',
+			'wrapper' => 'releve-node-form',
+			'method' => 'replace',
+			'effect' => 'fade',
+		);
+		
+
+		
+		$form['field_societe']['und']['#ajax'] = array(
+			'event' => 'change',
+			'callback' => 'aquaheat_field_bache_callback',
+			'wrapper' => 'releve-node-form',
+			'method' => 'replace',
+			'effect' => 'fade',
+			
+		);
+		
+		if (in_array('Client Aquaheat', $user->roles)){
+			$form['field_societe']['und']['#default_value'] = $user->uid;
+			$form['field_societe']['und']['#disabled'] = true;
+		}
+
+		//Désactiver les champs automatiquement calculés.
+		$computed_parameters = array (
+			'field_eauadoucie_hydroxyde','field_eauadoucie_carbonate','field_eauadoucie_bicarbonate',
+			'field_bachechauff_hydroxyde','field_bachechauff_carbonate','field_bachechauff_bicarbonate',
+			'field_chaudiere1_hydroxyde','field_chaudiere1_carbonate','field_chaudiere1_bicarbonate','field_chaudiere1_temperature',
+			'field_chaudiere2_hydroxyde','field_chaudiere2_carbonate','field_chaudiere2_bicarbonate','field_chaudiere2_temperature',
+			'field_chaudiere3_hydroxyde','field_chaudiere3_carbonate','field_chaudiere3_bicarbonate','field_chaudiere3_temperature',
+			'field_chaudiere4_hydroxyde','field_chaudiere4_carbonate','field_chaudiere4_bicarbonate','field_chaudiere4_temperature',
+			'field_retourcndnst_hydroxyde','field_retourcndnst_carbonate','field_retourcndnst_bicarbonate'
+		);
+
+		$access_to_admin_aquaheat = in_array('Aquaheat Admin', $user->roles)?true:false ;
+		foreach ($computed_parameters as $key => $value){
+			$form[$value]['#access'] = $access_to_admin_aquaheat;
+		}
+		
+		//Champs addtionnels à afficher uniquement pour l'admin Aquaheat.
+		$form['body']['#access'] = $access_to_admin_aquaheat;
+		$form['field_actions']['#access'] = $access_to_admin_aquaheat;
+		$form['field_presentation_pdf']['#access'] = $access_to_admin_aquaheat;
+		$form['field_rapport']['#access'] = $access_to_admin_aquaheat;
+		$form['field_statut_releve']['#access'] = $access_to_admin_aquaheat;
+
+		//Cette ligne m'a couté deux journée: l'identifiant du formulaire change à chaque fois qu'il y a une mise à jour ajax.
+		if (isset ($form['#id'])){
+			$form['field_societe']['und']['#ajax']['wrapper'] = $form['#id'];
+			$form['field_reset_chaudiere']['und']['#ajax']['wrapper'] = $form['#id'];
+		}
+				
+				
+		//Masquer ces champs avant que nous avons sélectionné l'entreprise.
+		$fields_to_be_hidden = array ('field_statut_releve','field_rapport','field_presentation_pdf','body','field_actions');
+		if (!isset($form['field_societe']['und']['#default_value'][0]) and in_array('Aquaheat Admin', $user->roles)){			
+			foreach ($fields_to_be_hidden as $key_f => $value_f){
+				$form[$value_f]['#prefix'] = '<div style="display:none;">';
+				$form[$value_f]['#suffix'] = '</div>';			
+			}
+		}
+
+		
+		if (isset ($form_state['input']['field_societe']['und']) or in_array('Client Aquaheat', $user->roles)){			
+			//Afficher ces champs après que nous avons sélectionné l'entreprise.
+			foreach ($fields_to_be_hidden as $key_f => $value_f){
+				$form[$value_f]['#prefix'] = '';
+				$form[$value_f]['#suffix'] = '';
+			}
+
+					
+			//Remise à zéro des champs informations clients avant qu'il soient populés.		
+			_reset_ajax_fields ($form,$form_state);
+
+			if (in_array('Client Aquaheat', $user->roles)){
+				$index = $user->uid;
+
+				if (!in_array ('Module Chaufferie', $user->roles)){
+					field_group_hide_field_groups($form, array('group_eau_adoucie'));
+					field_group_hide_field_groups($form, array('group_bache_chaufferie'));
+					field_group_hide_field_groups($form, array('group_chaudiere1'));
+					field_group_hide_field_groups($form, array('group_chaudiere2'));
+					field_group_hide_field_groups($form, array('group_chaudiere3'));
+					field_group_hide_field_groups($form, array('group_chaudiere4'));
+					field_group_hide_field_groups($form, array('group_retourcndnst'));
+				}
+			}
+			else{
+				$index = intval ($form_state['input']['field_societe']['und']);	
+				$societe_user  = user_load($index);
+				if (!in_array ('Module Osmoseur', $societe_user->roles)){
+					field_group_hide_field_groups($form, array('group_osmoseurs'));
+				}
+				if (!in_array ('Module Chaufferie', $societe_user->roles)){
+					field_group_hide_field_groups($form, array('group_eau_adoucie'));
+					field_group_hide_field_groups($form, array('group_bache_chaufferie'));
+					field_group_hide_field_groups($form, array('group_chaudiere1'));
+					field_group_hide_field_groups($form, array('group_chaudiere2'));
+					field_group_hide_field_groups($form, array('group_chaudiere3'));
+					field_group_hide_field_groups($form, array('group_chaudiere4'));
+					field_group_hide_field_groups($form, array('group_retourcndnst'));
+				}
+			}
+			
+			$information_list = _get_last_company_releve ($index);
+		
+			//Bouton Radio
+			if (isset($information_list['field_bache'])){
+				$form['field_bache']['und']['#default_value'] = $information_list['field_bache'];
+			}
+			
+			//Bouton Radio
+			if (isset($information_list['field_source_eau'])){
+				$form['field_source_eau']['und']['#default_value'] = $information_list['field_source_eau'];
+			}
+					
+			//Champ texte à deux valeurs
+			if (isset ($form_state['input']['field_reset_chaudiere']['und'][1])){
+				//watchdog ("aquaheat","hollande-2");
+				if ($form_state['input']['field_reset_chaudiere']['und'][1]=='1'){
+
+					if ($form_state['input']['field_libelle_chaudiere']['und'][0]['value']!=''){
+						$form['#fieldgroups']['group_chaudiere1']->label = $form_state['input']['field_libelle_chaudiere']['und'][0]['value'];
+					}
+					
+					if ($form_state['input']['field_libelle_chaudiere']['und'][1]['value']!=''){
+						$form['#fieldgroups']['group_chaudiere2']->label = $form_state['input']['field_libelle_chaudiere']['und'][1]['value'];
+					}
+					else{
+						field_group_hide_field_groups($form, array('group_chaudiere2'));
+					}
+					
+					if ($form_state['input']['field_libelle_chaudiere']['und'][2]['value']!=''){
+						$form['#fieldgroups']['group_chaudiere3']->label = $form_state['input']['field_libelle_chaudiere']['und'][2]['value'];
+					}
+					else{
+						field_group_hide_field_groups($form, array('group_chaudiere3'));
+					}
+
+					if ($form_state['input']['field_libelle_chaudiere']['und'][3]['value']!=''){
+						$form['#fieldgroups']['group_chaudiere4']->label = $form_state['input']['field_libelle_chaudiere']['und'][3]['value'];
+					}
+					else{
+						field_group_hide_field_groups($form, array('group_chaudiere4'));
+					}
+				}			
+			}
+			elseif(isset($information_list['field_libelle_chaudiere'])){
+				for ($i=0;$i<count($information_list['field_libelle_chaudiere']);$i++){
+					//watchdog ("aquaheat","hollande-1");
+					$form['field_libelle_chaudiere']['und'][$i]['value']['#value'] = $information_list['field_libelle_chaudiere'][$i]['value'];
+					
+					if (isset ($form['field_libelle_chaudiere']['und'][$i]['value']['#value'])){
+						$index=$i+1;
+						$form['#fieldgroups']['group_chaudiere'.$index]->label = $form['field_libelle_chaudiere']['und'][$i]['value']['#value'];
+					}
+				}				
+				if ($form['#fieldgroups']['group_chaudiere2']->label == 'Chaudière2'){
+					field_group_hide_field_groups($form, array('group_chaudiere2'));
+				}
+				
+				if ($form['#fieldgroups']['group_chaudiere3']->label == 'Chaudière3'){
+					field_group_hide_field_groups($form, array('group_chaudiere3'));
+				}
+
+				if ($form['#fieldgroups']['group_chaudiere4']->label == 'Chaudière4'){
+					field_group_hide_field_groups($form, array('group_chaudiere4'));
+				}
+			}
+			else{
+				field_group_hide_field_groups($form, array('group_chaudiere2'));
+				field_group_hide_field_groups($form, array('group_chaudiere3'));
+				field_group_hide_field_groups($form, array('group_chaudiere4'));
+			}
+
+			//Cases à cocher	
+			//Population des cases à cocher configuration.
+			$form['field_configuration']['und']['#after_build'][]='aquaheat_field_configuration';
+
+
+					
+			if (isset($information_list['field_configuration'])){
+				foreach ($information_list['field_configuration'] as $key => $value){
+					$form['field_configuration']['und']['#default_value'][] = (int)$value['value'] ;
+				}				
+				//$form['field_configuration']['und']['#default_value']= $information_list['field_configuration'];
+				//$form['field_configuration']['und']['#value']= $information_list['field_configuration'];
+			}
+			
+			//Liste déroulante
+			if (isset($information_list['field_produits_de_traitement'])){
+				foreach ($information_list['field_produits_de_traitement'] as $key => $value){
+					$form['field_produits_de_traitement']['und']['#value'][] = (int)$value['value'] ;
+				}
+			}
+			
+			//Champ texte
+			if (isset($information_list['field_reglage_pompe_doseuse'])){
+				$form['field_reglage_pompe_doseuse']['und'][0]['value']['#value'] = $information_list['field_reglage_pompe_doseuse'][0]['value'];
+			}
+			
+			//Champ texte
+			if (isset($information_list['field_stock_produit_traitement'])){
+				$form['field_stock_produit_traitement']['und'][0]['value']['#value'] = $information_list['field_stock_produit_traitement'][0]['value'];
+			}
+			
+			//Champ texte
+			if (isset($information_list['field_frequence_reglage_purge'])){
+				$form['field_frequence_reglage_purge']['und'][0]['value']['#value'] = $information_list['field_frequence_reglage_purge'][0]['value'];
+			}
+			
+			//Champ texte
+			if (isset($information_list['field_duree_purge'])){
+				$form['field_duree_purge']['und'][0]['value']['#value'] = $information_list['field_duree_purge'][0]['value'];
+			}
+			
+			if (1){
+				$field_name = 'field_osmoseur';
+				$items_count = count ($information_list['field_config_osmoseur_usine']);
+				$form_theme = $form[$field_name]['und']['#theme'];
+				// Remove delete and add more buttons
+				$form[$field_name]['und'][0]['remove_button']['#access'] = FALSE;
+				$form[$field_name]['und']['add_more']['#access'] = FALSE;	
+				$items = &$form_state['field'][$field_name]['und'];
+				
+				// Generate required number of fields collection
+				//Keep it > 1 and not > 0!
+				if ($items_count > 1 and $items['items_count'] != $items_count) {
+					$items['items_count'] = $items_count;
+					$items['field']['cardinality'] = $items_count;
+					$form[$field_name]['und'] = field_multiple_value_form($items['field'], $items['instance'], 'und', array(), $form, $form_state);
+					// Reset theme function, as field_multiple_value_form hijacks it
+					$form[$field_name]['und']['#theme'] = $form_theme;
+				}
+				// Fill generated fields with data
+
+				for ($delta = 0; $delta < $items_count; $delta++) {
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_debit_entree"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_debit_entree"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_debit_permeat"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_debit_permeat"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_rendement"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_rendement"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_difference_pression"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_difference_pression"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_conductivite_permeat"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_conductivite_permeat"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_conductivite_entree"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_conductivite_entree"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_debit_rejet"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_debit_rejet"];
+					$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]["field_libelle_osmoseur"]['und'][0]["value"]["#default_value"]= $information_list['field_config_osmoseur_usine'][$delta]["field_libelle_osmoseur"];
+					
+					//ob_start();
+					//var_dump($form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['und'][0]);
+					//$dumpy = ob_get_clean();
+					//watchdog ("aquaheat","field_omos".$dumpy);						
+	            
+					//$form['field_osmoseur']['und'][$delta]['#fieldgroups']['group_osmoseur']->label = $information_list['field_config_osmoseur_usine'][$delta]["field_libelle_osmoseur"];
+					//$form['field_osmoseur']['und'][$delta]['#fieldgroups']['group_osmoseur']->label = $delta;
+					$form['field_osmoseur']['und'][$delta]['#prefix'] = '<div><span class="osmoseur_label">'.$information_list['field_config_osmoseur_usine'][$delta]["field_libelle_osmoseur"].'</span>';
+					$form['field_osmoseur']['und'][$delta]['#suffix'] = '</div>';
+					
+				}	
+				
+				//Masquer les champs osmoseurs calculés automatiquement pour le client.				
+				$osmoseur_computed_fields_to_hide = array ('field_debit_entree','field_rendement','field_efficacite','field_volume_journalier_eau_brut','field_volume_journalier_antiscal','field_dose_as461','field_reglage_pompe','field_pression_entree','field_concentration_preparation','field_pression_rejet');
+				foreach ($form['field_osmoseur']['und'] as $key_osmo => $value_osmo){
+					foreach ($osmoseur_computed_fields_to_hide as $key_comp => $value_comp){
+						if (is_int ($key_osmo)){
+							$form['field_osmoseur']['und'][$key_osmo][$value_comp]['#access'] = $access_to_admin_aquaheat;	
+						}
+					}					
+				}
+				
+				//ob_start();
+				//var_dump ($key_osmo);				
+				//$dumpy = ob_get_clean();
+				//watchdog ("aquaheat","field_debit_entree".$dumpy);
+				
+				if (!in_array ('Module Osmoseur', $user->roles) and !in_array('Aquaheat Admin', $user->roles)){
+					field_group_hide_field_groups($form, array('group_osmoseurs'));
+				}
+				else{//Masquer le groupe de précalcul du module osmoseur
+					field_group_hide_field_groups($form, array('group_val_precalcul'));
+					for ($delta = 0; $delta < $items_count; $delta++) {
+						//Start from here: aucun effet pour cette partie
+						$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['#prefix'] = '<div style="display:none;">';
+						$form['field_osmoseur']['und'][$delta]['field_config_osmoseur_usine']['#suffix'] = '</div>';
+						//ob_start();	
+						//var_dump(array_keys($form['field_osmoseur']));
+						//$dumpy = ob_get_clean();
+						//watchdog ("aquaheat","Clean it".$dumpy);						
+					}					
+				}
+				
+				
+			}
+			else{
+				ob_start();
+				for ($delta = 0; $delta < count($form['field_osmoseur']['und']); $delta++) {
+					var_dump("fieldgroups ".$delta);				
+					var_dump($form['field_osmoseur']['und'][$delta]['#fieldgroups']['group_osmoseur']);
+				}				
+				$dumpy = ob_get_clean();
+				watchdog ('aquaheat','field_osmoseur6:'.$dumpy);				
+			}
+		}
+		elseif (isset($form['field_societe']['und']['#default_value'][0])){
+			$index = intval ($form['field_societe']['und']['#default_value'][0]);	
+			$societe_user  = user_load($index);
+			if (!in_array ('Module Osmoseur', $societe_user->roles)){
+				field_group_hide_field_groups($form, array('group_osmoseurs'));
+			}
+			if (!in_array ('Module Chaufferie', $societe_user->roles)){
+				field_group_hide_field_groups($form, array('group_eau_adoucie'));
+				field_group_hide_field_groups($form, array('group_bache_chaufferie'));
+				field_group_hide_field_groups($form, array('group_chaudiere1'));
+				field_group_hide_field_groups($form, array('group_chaudiere2'));
+				field_group_hide_field_groups($form, array('group_chaudiere3'));
+				field_group_hide_field_groups($form, array('group_chaudiere4'));
+				field_group_hide_field_groups($form, array('group_retourcndnst'));
+			}
+				
+
+		
+			//Typiquement dans un formulaire d'édition
+			if ($form['field_libelle_chaudiere']['und'][0]['value']['#default_value']!=''){
+				$form['#fieldgroups']['group_chaudiere1']->label = $form['field_libelle_chaudiere']['und'][0]['value']['#default_value'];
+			}
+			
+			if ($form['field_libelle_chaudiere']['und'][1]['value']['#default_value']!=''){
+				$form['#fieldgroups']['group_chaudiere2']->label = $form['field_libelle_chaudiere']['und'][1]['value']['#default_value'];
+			}
+			else{
+				field_group_hide_field_groups($form, array('group_chaudiere2'));
+			}
+			
+			if (isset($form['field_libelle_chaudiere']['und'][2]['value']['#default_value'])&&$form['field_libelle_chaudiere']['und'][2]['value']['#default_value']!=''){
+				$form['#fieldgroups']['group_chaudiere3']->label = $form['field_libelle_chaudiere']['und'][2]['value']['#default_value'];
+			}
+			else{
+				field_group_hide_field_groups($form, array('group_chaudiere3'));
+			}
+			
+			if (isset($form['field_libelle_chaudiere']['und'][3]['value']['#default_value'])&&$form['field_libelle_chaudiere']['und'][3]['value']['#default_value']!=''){
+				$form['#fieldgroups']['group_chaudiere4']->label = $form['field_libelle_chaudiere']['und'][3]['value']['#default_value'];
+			}
+			else{
+				field_group_hide_field_groups($form, array('group_chaudiere4'));
+			}				
+		}
+		else{ 
+			
+			field_group_hide_field_groups($form, array('group_infos'));
+			field_group_hide_field_groups($form, array('group_eau_adoucie'));
+			field_group_hide_field_groups($form, array('group_bache_chaufferie'));
+			field_group_hide_field_groups($form, array('group_chaudiere1'));
+			field_group_hide_field_groups($form, array('group_chaudiere2'));
+			field_group_hide_field_groups($form, array('group_chaudiere3'));
+			field_group_hide_field_groups($form, array('group_chaudiere4'));
+			field_group_hide_field_groups($form, array('group_retourcndnst'));
+			field_group_hide_field_groups($form, array('group_osmoseurs'));
+				
+		}
+
+	}
+}
+function _reset_ajax_fields (&$form, &$form_state){
+		
+	if (!isset ($form_state['input']['field_reset_chaudiere']['und'][1])){
+		$resest_it = true;			
+	}
+	elseif ($form_state['input']['field_reset_chaudiere']['und'][1]!='1'){
+		$resest_it = true;
+	}
+	else{
+		$resest_it = false;
+	}
+
+	if ($resest_it){
+		$form['field_bache']['und']['#default_value'] = null;
+		$form_state['input']['field_bache'] =  null;
+
+		$form['field_source_eau']['und']['#default_value'] = null;
+		$form_state['input']['field_source_eau'] =  null;
+	
+		$form['field_libelle_chaudiere']['und'][1]['value']['#value']=null;
+		$form['field_libelle_chaudiere']['und'][0]['value']['#value']=null;
+		$form_state['input']['field_libelle_chaudiere']=null;
+			
+		if (isset($form_state['input']['field_configuration'])){
+			$form['field_configuration']['und']['#default_value']=null;
+			unset ($form_state['input']['field_configuration']);
+		}
+		
+		if (isset($form_state['input']['field_produits_de_traitement'])){
+			$form['field_produits_de_traitement']['und']['#value']=null;
+			unset ($form_state['input']['field_produits_de_traitement']);
+		}
+		
+		if (isset($form_state['input']['field_osmoseur'])){
+			$form['field_osmoseur']['und']['#value']=null;
+			unset ($form_state['input']['field_osmoseur']);
+		}
+				
+		$filed_list = array ('field_reglage_pompe_doseuse','field_stock_produit_traitement','field_frequence_reglage_purge','field_duree_purge');
+		
+		foreach ($filed_list as $key => $value){
+			if (isset($form_state['input'][$value])){
+				unset ($form[$value]['und'][0]['value']['#value']);
+				unset ($form_state['input'][$value]);
+			}
+		}
+	}
+}
+function aquaheat_field_configuration ($form, &$form_state){
+	if (isset ($form['#default_value'])){		
+		foreach ($form['#default_value'] as $key => $value){
+			if (is_array($value)){
+				$index = intval ($value['value']);
+				$form[$index]['#checked']= true;
+				$form[$index]['#value']= $index;				
+			}
+		}
+	}
+	return ($form);
+}
+
+
+
+
+
+function aquaheat_field_bache_callback($form, $form_state) {
+	//Normally we should return part of the form, example return $form['field_bache'];
+	//yet since several fields are invoked we will put the whole form.
+	return $form;
+}
+
+
+
+/**
+ * Ajax-enabled select element causes replacement of a set of checkboxes
+ * based on the selection.
+ */
+function aquaheat_autocheckboxes($form, &$form_state) {
+	$default = !empty($form_state['values']['howmany_select']) ? $form_state['values']['howmany_select'] : 1;
+	
+	$form['howmany_select'] = array(
+		'#title' => t('How many checkboxes do you want?'),
+		'#type' => 'select',
+		'#options' => array(1 => 1, 2 => 2, 3 => 3, 4 => 4),
+		'#default_value' => $default,
+		'#ajax' => array(
+			'callback' => 'aquaheat_autocheckboxes_callback',
+			'wrapper' => 'checkboxes-div',
+			'method' => 'replace',
+			'effect' => 'fade',
+		),
+	);
+
+
+
+	$form['name'] = array(
+		  '#type' => 'textfield',
+		  '#title' => t('Your Name'),
+//		  '#default_value' => $node->title,
+		  '#size' => 60,
+		  '#maxlength' => 128, 
+		  //'#required' => TRUE,
+		'#ajax' => array(
+			'callback' => 'aquaheat_autocheckboxes_callback',
+			'wrapper' => 'checkboxes-div',
+			'method' => 'blur',
+			'effect' => 'fade',
+		),
+	);
+
+
+
+	
+	
+	$form['checkboxes_fieldset'] = array(
+		'#title' => t("Generated Checkboxes"),
+		// The prefix/suffix provide the div that we're replacing, named by
+		// #ajax['wrapper'] above.
+		'#prefix' => '<div id="checkboxes-div">',
+		'#suffix' => '</div>',
+		'#type' => 'fieldset',
+		'#description' => t('This is where we get automatically generated checkboxes'),
+	);
+	
+	$num_checkboxes = !empty($form_state['values']['howmany_select']) ? $form_state['values']['howmany_select'] : 1;
+	for ($i = 1; $i <= $num_checkboxes; $i++) {
+		$form['checkboxes_fieldset']["checkbox$i"] = array(
+			'#type' => 'checkbox',
+			'#title' => "Checkbox $i",
+		);
+	}
+	
+	if (!empty($form_state['values']['howmany_select']) ){
+		
+		$form['checkboxes_fieldset']['field_configuration']= array(
+			'#type' => 'checkboxes',
+			'#title' => 'Checkbox',
+			'#options' => array (1=> 'iehouda', 2=> 'chimron'),
+			'#default_value' => array(1),
+		);		
+		ob_start();
+		var_dump($form['checkboxes_fieldset']['field_configuration']);	
+				
+		$dumpy = ob_get_clean();
+		watchdog('aquaheat', 'information list6:'.$dumpy);
+		
+	}
+
+		
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+	);
+	//dpm ($form);
+
+	return $form;
+  
+}
+
+/**
+ * Callback element needs only select the portion of the form to be updated.
+ * Since #ajax['callback'] return can be HTML or a renderable array (or an
+ * array of commands), we can just return a piece of the form.
+ */
+function aquaheat_autocheckboxes_callback($form, $form_state) {
+//watchdog('talentinside', 'Kibalnou');
+  return $form['checkboxes_fieldset'];
+}
+
+function _get_last_company_releve ($societe_id){
+	$query = new EntityFieldQuery();
+
+	$query
+	  ->entityCondition('entity_type', 'node', '=')	  
+	  ->propertyOrderBy('created', 'DESC')
+	  ->range(0, 1)
+	  ->fieldCondition('field_societe', 'target_id', $societe_id, '=')
+	  ->propertyCondition('type', 'releve', '=')
+	  ->propertyCondition('status', 1, '=');
+	  
+//	  ->propertyCondition('created', '1294694496', '<');
+	//field_societe
+	//field_data_field_societe
+	//field_societe_target_id
+
+	$result = $query->execute();
+	$societe_history = array();
+	if (isset ($result['node'])){
+		$node_list = array_keys($result['node']);
+		if (isset($node_list[0])){
+			$node = node_load($node_list[0]);
+			$societe_history = array (
+			'field_bache' => $node->field_bache['und'][0]['value'], 
+			'field_source_eau' => $node->field_source_eau['und'][0]['value'],
+			'field_libelle_chaudiere' =>  isset($node->field_libelle_chaudiere['und'])?$node->field_libelle_chaudiere['und']:null,
+			'field_configuration' =>isset($node->field_configuration['und'])?$node->field_configuration['und']:null,
+			'field_produits_de_traitement' =>isset($node->field_produits_de_traitement['und'])?$node->field_produits_de_traitement['und']:null,
+			'field_reglage_pompe_doseuse' =>isset($node->field_reglage_pompe_doseuse['und'])?$node->field_reglage_pompe_doseuse['und']:null,
+			'field_stock_produit_traitement' =>isset($node->field_stock_produit_traitement['und'])?$node->field_stock_produit_traitement['und']:null,
+			'field_frequence_reglage_purge' =>isset($node->field_frequence_reglage_purge['und'])?$node->field_frequence_reglage_purge['und']:null,
+			'field_duree_purge' =>isset($node->field_duree_purge['und'])?$node->field_duree_purge['und']:null);
+				
+			//dpm ($node);
+			
+		}
+	}
+	
+	$company_profile  = user_load($societe_id);
+	$societe_history ['field_config_osmoseur_usine']= array ();
+	foreach ($company_profile->field_config_osmoseur_usine['und'] as $key => $value){
+			
+		$company_single_profile = $value['value'];		
+		$config_usine =entity_load('field_collection_item',array ($company_single_profile));
+		if (isset ($config_usine[$company_single_profile])){
+			$societe_history['field_config_osmoseur_usine'][$key]['field_libelle_osmoseur'] = $config_usine[$company_single_profile]->field_libelle_osmoseur['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_debit_entree'] = $config_usine[$company_single_profile]->field_debit_entree['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_debit_permeat'] = $config_usine[$company_single_profile]->field_debit_permeat['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_debit_rejet'] = $config_usine[$company_single_profile]->field_debit_rejet['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_rendement'] = $config_usine[$company_single_profile]->field_rendement['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_difference_pression'] = $config_usine[$company_single_profile]->field_difference_pression['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_conductivite_permeat'] = $config_usine[$company_single_profile]->field_conductivite_permeat['und'][0]["value"];
+			$societe_history['field_config_osmoseur_usine'][$key]['field_conductivite_entree'] = $config_usine[$company_single_profile]->field_conductivite_entree['und'][0]["value"];
+		}
+	}	
+
+	//ob_start();
+	//var_dump();
+	//$dumpy = ob_get_clean();
+	//watchdog('aquaheat', 'Company profile:'.$dumpy);		
+	return ($societe_history);
+		
+}
+function aquaheat_get_node_list (){
+	$societe_id = 38;
+	$information_list = _get_last_company_releve ($societe_id);
+
+	
+	return ('merci');
+
+		/*ob_start();
+		var_dump($result);
+		$dumpy = ob_get_clean();
+		watchdog('aquaheat', 'View Structure:'.$dumpy);*/
+		
+}
+
+function _generation_pdf(&$node) {
+	date_default_timezone_set('Europe/Berlin');
+	require(drupal_get_path('module', 'aquaheat') . '/fpdf17/pdf.php');
+
+	//$date = mktime(12, 0, 0, $date['month'], $date['day'], $date['year']);
+	$pdf = new PDF();
+	//$pdf = new PDF('L');
+	$pdf->AliasNbPages();
+	$pdf->AddPage();
+	
+	$pdf->Image('sites/all/modules/aquaheat/logo.png', 160, 5);
+	$pdf->SetFont('arial', '', 12);
+	$pdf->Text(155, 40, utf8_decode('Tunis le '.date('d/m/Y').',' ));
+	
+	$pdf->SetFont('arial', '', 16);
+	$pdf->Text(23, 50, utf8_decode('Rapport de Visite Chaufferie et Station - Relevé du '.date ('d/m/Y', strtotime($node->field_period['und'][0]['value'])) ));	
+	
+	
+
+	$pdf->SetFont('arial', 'B', 12);
+	$pdf->Text(10, 65, utf8_decode('Client:' ));
+	$pdf->SetFont('arial', '', 12);
+	
+	$societe_user = user_load($node->field_societe["und"][0]['target_id']);
+	$pdf->Text(24, 65, utf8_decode(ucfirst($societe_user->name)));
+	$pdf->SetFont('arial', 'B', 12);
+	$pdf->Text(110, 65, utf8_decode('Élaboré par:'));
+	$pdf->SetFont('arial', '', 12); 
+	$pdf->Text(135, 65, utf8_decode('Service Technique AQUAHEAT'));
+	if (isset ($societe_user->field_responsable['und'][0]['value'])){
+		$pdf->SetFont('arial', 'B', 12);
+		$pdf->Text(10, 100, utf8_decode('Contact: '));
+		$pdf->SetFont('arial', '', 12);
+		$pdf->Text(28, 100, utf8_decode($societe_user->field_responsable['und'][0]['value']));		
+	}
+		/*ob_start();
+		var_dump($societe_user);
+		$dumpy = ob_get_clean();
+		watchdog('aquaheat', 'User Structure:'.$dumpy);*/
+
+	if (isset ($societe_user->picture->uri)){
+		$pdf->Image(drupal_realpath($societe_user->picture->uri), 10, 67);
+	}
+    		
+	$pdf->Rect(8,58,190,45);
+	
+	$pdf->SetFont('arial', '', 12);
+	$pdf->SetXY(15, 110);
+	//strtotime($node->field_period['und'][0]['value']), "\n";
+	//$pdf->MultiCell(170, 10, utf8_decode("Suite à notre visite à votre usine le ").date('d/m/Y', $node->created).utf8_decode(", nous avons effectué des analyses d'eau concernant la chaufferie.Vous trouverez ci-dessous les valeurs mesurées le jour de notre visite ainsi que nos recommandations."),0);
+	$pdf->MultiCell(170, 10, utf8_decode("Suite à notre visite à votre usine le ").date ('d/m/Y', strtotime($node->field_period['und'][0]['value'])).utf8_decode(", nous avons effectué des analyses d'eau concernant la chaufferie.Vous trouverez ci-dessous les valeurs mesurées le jour de notre visite ainsi que nos recommandations."),0);
+	
+	$pdf->SetFont('arial', 'BU', 12);
+	$pdf->Ln(2);
+	$pdf->MultiCell(170, 10, utf8_decode("Relevé des mesures prises:"),0);	
+	
+    // Largeurs des colonnes
+	$pdf->SetFillColor(204,204,204);
+	//$pdf->SetDrawColor(30,30,30);
+    $w = array(10, 50, 35, 30,60);
+	    
+	$header = array(utf8_decode("N°"),utf8_decode("Paramètre"), utf8_decode("Valeur"), utf8_decode("Seuils Usuels"),utf8_decode("Remarques"));
+    // En-tête
+    for($i=0;$i<count($header);$i++){
+        $pdf->Cell($w[$i],7,$header[$i],1,0,'C',true);
+	}
+	$pdf->Ln();
+	
+	if (isset ($node->field_presentation_pdf['und'])){//We will draw the taken paramters.
+		$table_releve = $node->field_presentation_pdf['und'];
+		foreach ($table_releve as $key => $value){
+			$parameter_list = explode ('|',$value['value']);
+			if (count ($parameter_list)==2){//we have here a section
+				$pdf->SetFont('arial', 'B', 12);
+				$pdf->Cell(10,7,$parameter_list[0],1,0,'C',false);
+				$pdf->Cell(175,7,utf8_decode($parameter_list[1]),1,0,'L',false);
+				$pdf->Ln();
+			}
+			elseif (count ($parameter_list)==5){
+				//$parameter_data =  array("1","Température (T)", "50 °C", "<60","Valeur conforme.");
+				$pdf->SetFont('arial', '', 12);
+				
+				for($i=0;$i<count($parameter_list);$i++){
+					$pdf->Cell($w[$i],7,utf8_decode($parameter_list[$i]),1,0,'C',false);					
+				}
+				$pdf->Ln();
+			}
+		}		
+	}
+	
+	$pdf->Ln();
+	$pdf->SetFont('arial', 'BU', 12);
+	$pdf->MultiCell(170, 5, utf8_decode("Diagnostics et Recommandations:"),0);	
+	$pdf->WriteHTML(utf8_decode($node->body['und'][0]['value']));
+	//$pdf->MultiCell(170, 10, utf8_decode($node->body['und'][0]['value']),0);	
+	
+	$pdf->Ln();
+	$pdf->Ln();
+	
+	
+	$pdf->MultiCell(190, 5, utf8_decode("Nous restons à votre entière disposition pour tout complément d'informations."),0);
+	$pdf->MultiCell(190, 5, utf8_decode("Bien Cordialement,"),0,'R');
+	$pdf->MultiCell(190, 5, utf8_decode("Service Technique AQUAHEAT"),0,'R');
+	
+	
+	//$file_name = "Releve_" . date("YmdHis") . ".pdf";
+	//$file_name = "AE_" . ucfirst($societe_user->name).'_'.date("d-m-Y_Hi") . ".pdf";
+	$file_name = "AE_" . ucfirst($societe_user->name).'_'.date ('d-m-Y', strtotime($node->field_period['und'][0]['value'])) . ".pdf";
+	
+	
+	
+	$file_path = 'sites/default/files/private/releve/'.$file_name;
+	
+	$pdf->Output($file_path, "F");
+		
+	$file = file_save_data(file_get_contents($file_path), 'private://releve/'.$file_name,FILE_EXISTS_REPLACE );
+	$file->display = 1;
+	$file->uid = $node->uid;
+	
+	$node->field_rapport['und'][0] = (array)$file;
+	
+
+	
+}
+
+function _add_rapport_technique ($releve_information){
+	global $user;
+	$node = new stdClass();
+
+	$node->type = 'rapport_technique' ;
+	node_object_prepare($node);
+
+	$node->language = LANGUAGE_NONE ;
+	$node->uid = $user->uid;
+	$node->status = 1; //(1 or 0): published or not
+	$node->promote = 0; //(1 or 0): promoted to front page
+	$node->comment = 1; //2 = comments on, 1 = comments off
+	
+	
+	date_default_timezone_set('Africa/Tunis');
+	
+	$node->title = "Rapport d'analyse d'eau chaufferie";
+	$node->field_categorie['und'][0]["value"] = "1";
+	
+	$node->field_societe["und"][0]['target_id'] = $releve_information->field_societe["und"][0]['target_id'];
+	
+	//$node->field_period['und'][0]['value'] = date("Y/m/d H:i:s", $releve_information->created); 
+	$node->field_period['und'][0]['value'] = $releve_information->field_period['und'][0]['value'];
+	
+	$file_information = file_load ($releve_information->field_rapport['und'][0]['fid']);
+	
+	
+	
+	$file = file_save_data(file_get_contents(drupal_realpath($file_information->uri)), 'public://'.$file_information->filename,FILE_EXISTS_REPLACE );	
+	$file->display = 1;
+	$file->uid = $releve_information->uid;
+	
+	$node->field_rapport['und'][0] = (array)$file;
+	$node->field_auteur["und"][0]['target_id'] =  $releve_information->uid;
+	$node->field_reference_societe['und'][0]["value"] = $releve_information->field_reference_societe['und'][0]["value"];
+
+	$node->field_date_affectation[$node->language][0]['value'] = date("Y/m/d H:i:s"); 
+	
+	$node = node_submit($node);	
+	node_save($node);		
+	
+}
+
+function aquaheat_node_view($node, $view_mode, $langcode){
+	
+	if ($node->type=='releve' and $view_mode == 'full'){
+		if (isset ($node->field_libelle_chaudiere['und'][0]['value'])){
+			$node->content['#fieldgroups']['group_chaudiere1']->label = $node->field_libelle_chaudiere['und'][0]['value'] ;
+			
+		}
+		if (isset ($node->field_libelle_chaudiere['und'][1]['value'])){
+			$node->content['#fieldgroups']['group_chaudiere2']->label = $node->field_libelle_chaudiere['und'][1]['value'] ;
+			
+		}
+		if (isset ($node->field_libelle_chaudiere['und'][2]['value'])){
+			$node->content['#fieldgroups']['group_chaudiere3']->label = $node->field_libelle_chaudiere['und'][2]['value'] ;
+			
+		}
+		if (isset ($node->field_libelle_chaudiere['und'][3]['value'])){
+			$node->content['#fieldgroups']['group_chaudiere4']->label = $node->field_libelle_chaudiere['und'][3]['value'] ;
+			
+		}		
+		global $user; 
+		$access_to_admin_aquaheat = in_array('Aquaheat Admin', $user->roles)?true:false ;
+		
+		if ($access_to_admin_aquaheat == false){
+			$node->content['body']['#access'] = false;
+			$node->content['field_rapport']['#access'] = false;
+			$node->content['field_presentation_pdf']['#access'] = false;
+		}
+	}
+}
+
+function aquaheat_views_pre_render (&$view){
+	
+}

@@ -1,0 +1,3 @@
+name = Aquaheat
+description = Customized module for Aquaheat website
+core = 7.x
